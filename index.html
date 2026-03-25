@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل هوش پیش‌بین پتروشیمی خارک - انرژی و یوتیلیتی</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+        crossorigin="anonymous" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous">
+    <style>
+        :root {
+            --bg: #080c14;
+            --panel: #111722;
+            --border: #222d3d;
+            --primary: #00d2ff;
+            --primary-dark: #0099cc;
+            --accent: #ff9f43;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #ee5253;
+            --info: #54a0ff;
+            --text: #f1f2f6;
+            --muted: #a4b0be;
+            --gradient-primary: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --gradient-accent: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+            --gradient-success: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            height: 70px;
+            background: linear-gradient(90deg, #111722 0%, #1a2332 100%);
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container {
+            background: var(--gradient-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .header-title h1 {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header-title span {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        .time-display {
+            font-size: 0.85rem;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+
+        /* Main Grid Layout */
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 1.1fr 1.6fr 0.9fr;
+            gap: 12px;
+            padding: 12px;
+            height: calc(100vh - 70px);
+            overflow: auto;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: auto;
+        }
+
+        /* Components */
+        .widget {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .widget:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .widget-title {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .widget-title i {
+            margin-left: 6px;
+        }
+
+        .widget-subtitle {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            background: rgba(0, 210, 255, 0.05);
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        .kpi-card .label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .kpi-card .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .kpi-card .unit {
+            font-size: 0.7rem;
+            color: var(--primary);
+        }
+
+        .kpi-card .trend {
+            font-size: 0.65rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .trend.up {
+            color: var(--success);
+        }
+
+        .trend.down {
+            color: var(--danger);
+        }
+
+        /* Chart Canvas Constraints */
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .chart-display {
+            display: none;
+            height: 100%;
+        }
+
+        .chart-display.active {
+            display: block;
+        }
+
+        /* Alert Section */
+        .alert-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .alert-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .alert-tab {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .alert-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .alert-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 3px;
+        }
+
+        .alert-card {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 3px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .alert-card:hover {
+            transform: translateX(-3px);
+        }
+
+        .alert-card.critical {
+            border-color: var(--danger);
+            background: rgba(238, 82, 83, 0.08);
+            animation: pulse-alert 2s infinite;
+        }
+
+        .alert-card.warning {
+            border-color: var(--warning);
+            background: rgba(243, 156, 18, 0.08);
+        }
+
+        .alert-card.predictive {
+            border-color: var(--accent);
+            background: rgba(255, 159, 67, 0.08);
+        }
+
+        .alert-card.info {
+            border-color: var(--primary);
+            background: rgba(0, 210, 255, 0.08);
+        }
+
+        .alert-card .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-card .alert-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .alert-card .alert-time {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        @keyframes pulse-alert {
+            0% {
+                box-shadow: 0 0 0 0 rgba(238, 82, 83, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 5px rgba(238, 82, 83, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(238, 82, 83, 0);
+            }
+        }
+
+        /* Chatbot UI */
+        .chat-widget {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(160deg, #0f1520 0%, #141b29 100%);
+            border-color: var(--primary);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+        }
+
+        .chat-title {
+            font-size: 1rem;
+            color: var(--primary);
+        }
+
+        .chat-subtitle {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chatDisplay {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .msg {
+            max-width: 85%;
+            margin-bottom: 0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+
+        .msg.ai {
+            background: rgba(26, 35, 50, 0.8);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-top-right-radius: 4px;
+        }
+
+        .msg.user {
+            background: var(--gradient-primary);
+            color: #fff;
+            align-self: flex-end;
+            border-top-left-radius: 4px;
+        }
+
+        .msg .msg-time {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            text-align: left;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        input#chatInput {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        input#chatInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+        }
+
+        button#sendButton {
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+            padding: 0 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        button#sendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .chat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .chat-chip {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-chip:hover {
+            background: rgba(0, 210, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Equipment Status */
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .equipment-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .equipment-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .equipment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .equipment-status {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .status-online {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success);
+        }
+
+        .status-warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning);
+        }
+
+        .status-offline {
+            background: rgba(238, 82, 83, 0.1);
+            color: var(--danger);
+        }
+
+        /* Tabs */
+        .chart-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .chart-tab {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .chart-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #39465e;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .column {
+                min-height: 400px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                height: auto;
+                flex-direction: column;
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .header-left,
+            .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .widget-title {
+                font-size: 0.85rem;
+            }
+
+            .msg {
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-tabs {
+                flex-wrap: wrap;
+            }
+
+            .chart-tab {
+                flex: 1;
+                text-align: center;
+                padding: 8px 5px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Utility Classes */
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-muted {
+            color: var(--muted);
+        }
+
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+
+        .mt-10 {
+            margin-top: 10px;
+        }
+
+        .mt-15 {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="dashboard-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div class="header-title">
+                <h1>پتروشیمی خارک</h1>
+                <span>سیستم هوش مصنوعی عملیاتی - بخش انرژی و یوتیلیتی</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>وضعیت سیستم: فعال (Real-time)</span>
+            </div>
+            <div class="time-display" id="currentTime">
+                <!-- زمان توسط JS پر می‌شود -->
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-wrapper">
+        <!-- ستون اول: KPI و سلامت تجهیزات -->
+        <div class="column">
+            <!-- کارت KPI -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-line"></i> شاخص‌های کلیدی عملکرد (KPI)</span>
+                    <span class="text-muted" style="font-size: 0.75rem;">آخرین به‌روزرسانی: <span id="updateTime">هم
+                            اکنون</span></span>
+                </div>
+                <div class="kpi-grid" id="kpiContainer">
+                    <!-- KPI ها توسط JS تولید می‌شوند -->
+                </div>
+            </div>
+
+            <!-- سلامت تجهیزات -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-heartbeat"></i> سلامت تجهیزات اصلی</span>
+                    <div class="widget-subtitle">مبتنی بر تحلیل پیش‌بینانه</div>
+                </div>
+                <div class="equipment-grid">
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(0, 210, 255, 0.1); color: var(--primary);">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">بویلر #۱</div>
+                        <div class="equipment-status status-online">بهینه</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-fan"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">فن ID</div>
+                        <div class="equipment-status status-warning">نیاز بازرسی</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(0, 210, 255, 0.1); color: var(--primary);">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">پمپ تغذیه</div>
+                        <div class="equipment-status status-online">عادی</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">کمپرسور هوا</div>
+                        <div class="equipment-status status-online">عادی</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(243, 156, 18, 0.1); color: var(--warning);">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">توربین</div>
+                        <div class="equipment-status status-warning">دمای بالا</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">ژنراتور</div>
+                        <div class="equipment-status status-online">عادی</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نمودار رادار سلامت تجهیزات -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-radar"></i> آنالیز جامع سلامت تجهیزات</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ستون دوم: نمودارهای اصلی -->
+        <div class="column">
+            <!-- تب‌های نمودار -->
+            <div class="widget">
+                <div class="chart-tabs">
+                    <div class="chart-tab active" data-chart="pressure">فشار بخار</div>
+                    <div class="chart-tab" data-chart="temperature">دماها</div>
+                    <div class="chart-tab" data-chart="flow">جریان‌ها</div>
+                    <div class="chart-tab" data-chart="efficiency">راندمان</div>
+                    <div class="chart-tab" data-chart="vibration">لرزش‌ها</div>
+                </div>
+
+<div class="chart-container">
+
+    <div class="chart-display active">
+        <canvas id="pressureChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="temperatureChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="flowChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="efficiencyChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="vibrationChart"></canvas>
+    </div>
+
+</div>
+
+            </div>
+
+            <!-- نمودار توزیع انرژی -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-pie"></i> توزیع بار انرژی در واحدها</span>
+                    <div class="widget-subtitle">مصرف برق (MW) - زمان واقعی</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="energyDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ستون سوم: هشدارها و چت بات -->
+        <div class="column">
+            <!-- هشدارهای هوشمند -->
+            <div class="widget alert-section">
+                <div class="widget-title">
+                    <span><i class="fas fa-exclamation-triangle"></i> هشدارهای هوشمند و پیش‌بین</span>
+                    <div class="widget-subtitle">تحلیل مبتنی بر AI</div>
+                </div>
+
+                <div class="alert-tabs">
+                    <div class="alert-tab active" data-alert="all">همه</div>
+                    <div class="alert-tab" data-alert="critical">بحرانی</div>
+                    <div class="alert-tab" data-alert="predictive">پیش‌بینی</div>
+                    <div class="alert-tab" data-alert="optimization">بهینه‌سازی</div>
+                </div>
+
+                <div class="alert-list" id="alertList">
+                    <!-- هشدارها توسط JS تولید می‌شوند -->
+                </div>
+            </div>
+
+            <!-- چت بات هوشمند -->
+            <div class="widget chat-widget">
+                <div class="chat-header">
+                    <div class="chat-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="chat-title">دستیار مهندسی هوشمند (RAG)</div>
+                        <div class="chat-subtitle">پرسش‌های فنی درباره تمام سیگنال‌ها و نمودارها</div>
+                    </div>
+                </div>
+
+                <div class="chat-area">
+                    <div id="chatDisplay">
+                        <div class="msg ai">
+                            <div>سلام ! من دستیار هوشمند این پنل هستم. می‌توانم تمام نمودارها و داده‌های عملیاتی را
+                                تحلیل کنم و به سوالات فنی شما پاسخ دهم.</div>
+                            <div class="msg-time">هم اکنون</div>
+                        </div>
+                        <div class="msg ai">
+                            <div>برای شروع می‌توانید روی یکی از چپ‌های زیر کلیک کنید یا سوال خود را تایپ نمایید.</div>
+                            <div class="msg-time">هم اکنون</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-chips" id="chatChips">
+                        <!-- چپ‌ها توسط JS تولید می‌شوند -->
+                    </div>
+
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput"
+                            placeholder="سوال فنی خود را بپرسید (مثلاً: تحلیل فشار بخار در ۲۴ ساعت گذشته)"
+                            autocomplete="off">
+                        <button id="sendButton"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== متغیرهای سراسری ====================
+        let mockData = [];
+        let charts = {};
+        let activeChartTab = 'pressure';
+        let activeAlertTab = 'all';
+
+        // ==================== ماک دیتاهای جامع ====================
+        function generateMockData() {
+            const baseTime = new Date('2025-12-11T00:00:00');
+            const data = [];
+
+            // تولید 48 ساعت داده (هر 10 دقیقه یک رکورد)
+            for (let i = 0; i < 288; i++) {
+                const timestamp = new Date(baseTime.getTime() + i * 10 * 60 * 1000);
+                const hour = timestamp.getHours();
+                const minute = timestamp.getMinutes();
+
+                // نوسانات طبیعی در داده‌ها
+                const timeFactor = Math.sin(hour * Math.PI / 12) * 0.5 + 0.5;
+                const randomFactor = 0.95 + Math.random() * 0.1;
+
+                data.push({
+                    timestamp: timestamp.toISOString(),
+                    // بویلر و تولید بخار
+                    boiler_drum_level: 50 + (Math.sin(i / 20) * 3) + (Math.random() * 2 - 1),
+                    boiler_drum_pressure: 118 + (Math.sin(i / 30) * 0.5) + (Math.random() * 0.2 - 0.1),
+                    superheated_steam_temp: 448 + (Math.sin(i / 40) * 5) + (Math.random() * 2 - 1),
+                    feedwater_flow: 285 + (Math.sin(i / 25) * 10) + (Math.random() * 5 - 2.5),
+                    fuel_gas_flow: 2450 + (Math.sin(i / 35) * 100) + (Math.random() * 50 - 25),
+                    combustion_air_flow: 28500 + (Math.sin(i / 30) * 1000) + (Math.random() * 500 - 250),
+                    flue_gas_o2: 3.2 + (Math.sin(i / 50) * 0.3) + (Math.random() * 0.2 - 0.1),
+                    flue_gas_temp: 285 + (Math.sin(i / 45) * 10) + (Math.random() * 5 - 2.5),
+                    boiler_efficiency: 91 + (Math.sin(i / 60) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    steam_production: 280 + (Math.sin(i / 30) * 15) + (Math.random() * 8 - 4),
+
+                    // سیستم بخار
+                    hp_steam_header_pressure: 115.5 + (Math.sin(i / 25) * 1) + (Math.random() * 0.5 - 0.25),
+                    mp_steam_header_pressure: 42 + (Math.sin(i / 30) * 2) + (Math.random() * 1 - 0.5),
+                    lp_steam_header_pressure: 8.5 + (Math.sin(i / 35) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    condensate_return_flow: 210 + (Math.sin(i / 40) * 20) + (Math.random() * 10 - 5),
+
+                    // آب صنعتی و تغذیه
+                    deaerator_level: 68 + (Math.sin(i / 50) * 5) + (Math.random() * 3 - 1.5),
+                    dm_water_tank_level: 72 + (Math.sin(i / 55) * 4) + (Math.random() * 2 - 1),
+                    feedwater_ph: 9.2 + (Math.random() * 0.2 - 0.1),
+                    feedwater_conductivity: 5.5 + (Math.random() * 1 - 0.5),
+
+                    // هوای فشرده و نیتروژن
+                    instrument_air_pressure: 8.0 + (Math.sin(i / 60) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    nitrogen_pressure: 7.8 + (Math.sin(i / 65) * 0.3) + (Math.random() * 0.2 - 0.1),
+                    instrument_air_dewpoint: -45 + (Math.random() * 5 - 2.5),
+
+                    // برق و انرژی
+                    power_consumption_mw: 12 + (Math.sin(i / 20) * 2) + (Math.random() * 1 - 0.5),
+                    power_factor: 0.92 + (Math.random() * 0.04 - 0.02),
+                    turbine_vibration: 1.2 + (Math.sin(i / 70) * 0.3) + (Math.random() * 0.2 - 0.1),
+
+                    // لرزش‌ها
+                    fd_fan_vibration: 2.1 + (Math.sin(i / 80) * 0.4) + (Math.random() * 0.3 - 0.15),
+                    id_fan_vibration: 1.8 + (Math.sin(i / 75) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    feedwater_pump_vibration: 1.5 + (Math.sin(i / 85) * 0.3) + (Math.random() * 0.2 - 0.1),
+
+                    // وضعیت تجهیزات
+                    feedwater_pump_status: "ON",
+                    fd_fan_status: "ON",
+                    id_fan_status: "ON",
+                    burner_1_status: "ON",
+                    burner_2_status: "ON",
+                    flame_detector_ok: true,
+                    low_water_cutoff: false,
+                    high_pressure_trip: false,
+                    o2_trim_active: true,
+
+                    // وضعیت و بینش AI
+                    status_label: i > 200 && i < 220 ? "Warning" : "Normal",
+                    ai_insight: i > 200 && i < 220 ? "افزایش غیرعادی دمای flue gas شناسایی شد. بررسی گردد." : "همه پارامترها در محدوده بهینه"
+                });
+            }
+
+            return data;
+        }
+
+        // ==================== راه‌اندازی اولیه ====================
+        document.addEventListener('DOMContentLoaded', function () {
+            // تولید داده‌ها
+            mockData = generateMockData();
+
+            // تنظیم زمان فعلی
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+
+            // ایجاد KPI کارت‌ها
+            createKPICards();
+
+            // ایجاد هشدارها
+            createAlerts();
+
+            // ایجاد چپ‌های چت
+            createChatChips();
+
+            // راه‌اندازی نمودارها
+            initCharts();
+
+            // راه‌اندازی رویدادهای UI
+            initUIEvents();
+
+            // شروع شبیه‌سازی داده‌های زنده
+            startLiveDataSimulation();
+        });
+
+        // ==================== توابع ابزاری ====================
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('fa-IR');
+            const dateStr = now.toLocaleDateString('fa-IR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('currentTime').innerHTML = `${dateStr} - ${timeStr}`;
+        }
+
+        function createKPICards() {
+            const latestData = mockData[mockData.length - 1];
+            const previousData = mockData[mockData.length - 2];
+
+            const kpis = [
+                {
+                    id: 'kpi-efficiency',
+                    label: 'راندمان بویلر',
+                    value: latestData.boiler_efficiency.toFixed(1),
+                    unit: '%',
+                    icon: 'fas fa-percentage',
+                    trend: latestData.boiler_efficiency > previousData.boiler_efficiency ? 'up' : 'down',
+                    change: Math.abs(latestData.boiler_efficiency - previousData.boiler_efficiency).toFixed(2)
+                },
+                {
+                    id: 'kpi-steam',
+                    label: 'تولید بخار',
+                    value: latestData.steam_production.toFixed(0),
+                    unit: 'T/h',
+                    icon: 'fas fa-fire',
+                    trend: latestData.steam_production > previousData.steam_production ? 'up' : 'down',
+                    change: Math.abs(latestData.steam_production - previousData.steam_production).toFixed(1)
+                },
+                {
+                    id: 'kpi-pressure',
+                    label: 'فشار بخار HP',
+                    value: latestData.hp_steam_header_pressure.toFixed(1),
+                    unit: 'Bar',
+                    icon: 'fas fa-tachometer-alt',
+                    trend: latestData.hp_steam_header_pressure > previousData.hp_steam_header_pressure ? 'up' : 'down',
+                    change: Math.abs(latestData.hp_steam_header_pressure - previousData.hp_steam_header_pressure).toFixed(1)
+                },
+                {
+                    id: 'kpi-fuel',
+                    label: 'مصرف سوخت',
+                    value: (latestData.fuel_gas_flow / 1000).toFixed(1),
+                    unit: 'kSCFH',
+                    icon: 'fas fa-gas-pump',
+                    trend: latestData.fuel_gas_flow > previousData.fuel_gas_flow ? 'up' : 'down',
+                    change: Math.abs(latestData.fuel_gas_flow - previousData.fuel_gas_flow).toFixed(0)
+                },
+                {
+                    id: 'kpi-power',
+                    label: 'مصرف برق',
+                    value: latestData.power_consumption_mw.toFixed(1),
+                    unit: 'MW',
+                    icon: 'fas fa-bolt',
+                    trend: latestData.power_consumption_mw > previousData.power_consumption_mw ? 'up' : 'down',
+                    change: Math.abs(latestData.power_consumption_mw - previousData.power_consumption_mw).toFixed(1)
+                },
+                {
+                    id: 'kpi-o2',
+                    label: 'اکسیژن گاز خروجی',
+                    value: latestData.flue_gas_o2.toFixed(1),
+                    unit: '%',
+                    icon: 'fas fa-wind',
+                    trend: latestData.flue_gas_o2 > previousData.flue_gas_o2 ? 'up' : 'down',
+                    change: Math.abs(latestData.flue_gas_o2 - previousData.flue_gas_o2).toFixed(1)
+                }
+            ];
+
+            const container = document.getElementById('kpiContainer');
+            container.innerHTML = '';
+
+            kpis.forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.id = kpi.id;
+
+                card.innerHTML = `
+                <div class="label"><i class="${kpi.icon}"></i> ${kpi.label}</div>
+                <div class="value">${kpi.value}</div>
+                <div class="unit">${kpi.unit}</div>
+                <div class="trend ${kpi.trend}">
+                    <i class="fas fa-arrow-${kpi.trend === 'up' ? 'up' : 'down'}"></i>
+                    ${kpi.change} ${kpi.unit.replace('%', '')}
+                </div>
+            `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function createAlerts() {
+            const alerts = [
+                {
+                    type: 'critical',
+                    title: 'لرزش یاتاقان فن ID',
+                    time: '۲ دقیقه پیش',
+                    description: 'لرزش یاتاقان فن ID به 2.4mm/s رسیده که فراتر از حد مجاز (2.0mm/s) است. بازرسی فوری توصیه می‌شود.',
+                    equipment: 'فن ID - بویلر #۱'
+                },
+                {
+                    type: 'predictive',
+                    title: 'افت فشار بخار پیش‌بینی',
+                    time: '۱۵ دقیقه پیش',
+                    description: 'مدل AI پیش‌بینی می‌کند فشار بخار در ۲ ساعت آینده به 116.8 بار کاهش یابد (احتمال ۸۲٪). دلیل: نوسان در دبی گاز ورودی.',
+                    equipment: 'هدر بخار HP'
+                },
+                {
+                    type: 'warning',
+                    title: 'دمای Flue Gas بالا',
+                    time: '۱ ساعت پیش',
+                    description: 'دمای گاز خروجی به ۲۹۵ درجه سانتیگراد رسیده (حد مجاز: ۲۹۰). تمیزکاری لوله‌های بویلر برای هفته آینده برنامه‌ریزی شود.',
+                    equipment: 'بویلر #۱'
+                },
+                {
+                    type: 'info',
+                    title: 'افزایش مصرف سوخت',
+                    time: '۲ ساعت پیش',
+                    description: 'مصرف سوخت ۳٪ افزایش یافته در حالی که تولید بخار ثابت مانده. بررسی نسبت هوا/سوخت توصیه می‌شود.',
+                    equipment: 'سیستم احتراق'
+                },
+                {
+                    type: 'predictive',
+                    title: 'کاهش راندمان پیش‌بینی',
+                    time: '۳ ساعت پیش',
+                    description: 'پیش‌بینی می‌شود راندمان بویلر در ۸ ساعت آینده به ۹۰.۲٪ کاهش یابد. علت احتمالی: افزایش رسوب در لوله‌ها.',
+                    equipment: 'بویلر #۱'
+                },
+                {
+                    type: 'info',
+                    title: 'پایش کیفیت آب',
+                    time: '۴ ساعت پیش',
+                    description: 'هدایت الکتریکی آب تغذیه به ۷ µS/cm افزایش یافته. زمان برای blowdown کنترل شده فرا رسیده است.',
+                    equipment: 'سیستم آب تغذیه'
+                }
+            ];
+
+            const container = document.getElementById('alertList');
+            container.innerHTML = '';
+
+            alerts.forEach(alert => {
+                const alertEl = document.createElement('div');
+                alertEl.className = `alert-card ${alert.type}`;
+                alertEl.dataset.type = alert.type;
+
+                alertEl.innerHTML = `
+                <div class="alert-header">
+                    <div class="alert-title">
+                        <i class="fas fa-${alert.type === 'critical' ? 'exclamation-circle' : alert.type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                        ${alert.title}
+                    </div>
+                    <div class="alert-time">${alert.time}</div>
+                </div>
+                <div>${alert.description}</div>
+                <div style="font-size: 0.7rem; color: var(--muted); margin-top: 5px;">
+                    <i class="fas fa-cog"></i> ${alert.equipment}
+                </div>
+            `;
+
+                container.appendChild(alertEl);
+            });
+        }
+
+        function createChatChips() {
+            const chips = [
+                "تحلیل فشار بخار امروز",
+                "علت افزایش مصرف سوخت",
+                "وضعیت لرزش فن‌ها",
+                "پیش‌بینی راندمان فردا",
+                "هشدارهای بحرانی فعلی",
+                "نمودار دمای Flue Gas",
+                "کیفیت آب بویلر",
+                "مصرف برق واحدها",
+                "وضعیت تجهیزات اصلی",
+                "پیشنهاد بهینه‌سازی"
+            ];
+
+            const container = document.getElementById('chatChips');
+            container.innerHTML = '';
+
+            chips.forEach(chipText => {
+                const chip = document.createElement('div');
+                chip.className = 'chat-chip';
+                chip.textContent = chipText;
+                chip.addEventListener('click', () => {
+                    sendMessage(chipText);
+                });
+                container.appendChild(chip);
+            });
+        }
+
+        // ==================== نمودارها ====================
+        function initCharts() {
+            // تنظیمات کلی Chart.js
+            Chart.defaults.color = '#a4b0be';
+            Chart.defaults.font.family = 'Vazirmatn';
+            Chart.defaults.font.size = 11;
+
+            // نمودار رادار سلامت تجهیزات
+            const radarCtx = document.getElementById('radarChart').getContext('2d');
+            charts.radar = new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['دمای روغن', 'لرزش', 'صدا', 'ولتاژ', 'روانکاری', 'کارایی'],
+                    datasets: [
+                        {
+                            label: 'کمپرسور اصلی',
+                            data: [85, 40, 70, 90, 88, 82],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            pointBackgroundColor: '#2ecc71'
+                        },
+                        {
+                            label: 'پمپ تغذیه',
+                            data: [75, 65, 60, 85, 80, 78],
+                            borderColor: '#00d2ff',
+                            backgroundColor: 'rgba(0, 210, 255, 0.2)',
+                            pointBackgroundColor: '#00d2ff'
+                        },
+                        {
+                            label: 'توربین',
+                            data: [70, 75, 65, 88, 82, 80],
+                            borderColor: '#ff9f43',
+                            backgroundColor: 'rgba(255, 159, 67, 0.2)',
+                            pointBackgroundColor: '#ff9f43'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            grid: { color: '#222d3d' },
+                            angleLines: { color: '#222d3d' },
+                            ticks: { backdropColor: 'transparent' },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // نمودار فشار بخار
+            const pressureCtx = document.getElementById('pressureChart').getContext('2d');
+            const timeLabels = mockData.slice(-24).map(d => {
+                const date = new Date(d.timestamp);
+                return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+            });
+
+            charts.pressure = new Chart(pressureCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'فشار درام بویلر',
+                            data: mockData.slice(-24).map(d => d.boiler_drum_pressure),
+                            borderColor: '#00d2ff',
+                            backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'فشار هدر HP',
+                            data: mockData.slice(-24).map(d => d.hp_steam_header_pressure),
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'فشار هدر MP',
+                            data: mockData.slice(-24).map(d => d.mp_steam_header_pressure || 42 + Math.random()),
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'فشار (Bar)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // نمودار دماها
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            charts.temperature = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'دمای بخار سوپرهیت',
+                            data: mockData.slice(-24).map(d => d.superheated_steam_temp),
+                            borderColor: '#ee5253',
+                            backgroundColor: 'rgba(238, 82, 83, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'دمای Flue Gas',
+                            data: mockData.slice(-24).map(d => d.flue_gas_temp),
+                            borderColor: '#ff9f43',
+                            backgroundColor: 'rgba(255, 159, 67, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'دمای آب تغذیه',
+                            data: mockData.slice(-24).map(d => 215 + Math.sin(new Date(d.timestamp).getHours() / 2) * 5 + Math.random() * 3),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'دما (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // نمودار جریان‌ها
+            const flowCtx = document.getElementById('flowChart').getContext('2d');
+            charts.flow = new Chart(flowCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'جریان سوخت',
+                            data: mockData.slice(-24).map(d => d.fuel_gas_flow / 1000),
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'جریان هوا',
+                            data: mockData.slice(-24).map(d => d.combustion_air_flow / 1000),
+                            borderColor: '#1abc9c',
+                            backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'جریان آب تغذیه',
+                            data: mockData.slice(-24).map(d => d.feedwater_flow),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'جریان سوخت/هوا (kSCFH)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: 'جریان آب (T/h)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // نمودار راندمان
+            const efficiencyCtx = document.getElementById('efficiencyChart').getContext('2d');
+            charts.efficiency = new Chart(efficiencyCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'راندمان بویلر',
+                            data: mockData.slice(-24).map(d => d.boiler_efficiency),
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'اکسیژن گاز خروجی',
+                            data: mockData.slice(-24).map(d => d.flue_gas_o2),
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'راندمان (%)'
+                            },
+                            min: 89,
+                            max: 93
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: 'اکسیژن (%)'
+                            },
+                            min: 2.5,
+                            max: 4.0
+                        }
+                    }
+                }
+            });
+
+            // نمودار لرزش‌ها
+            const vibrationCtx = document.getElementById('vibrationChart').getContext('2d');
+            charts.vibration = new Chart(vibrationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['فن FD', 'فن ID', 'پمپ تغذیه', 'توربین', 'کمپرسور'],
+                    datasets: [
+                        {
+                            label: 'لرزش فعلی (mm/s)',
+                            data: [
+                                mockData[mockData.length - 1].fd_fan_vibration,
+                                mockData[mockData.length - 1].id_fan_vibration,
+                                mockData[mockData.length - 1].feedwater_pump_vibration,
+                                mockData[mockData.length - 1].turbine_vibration,
+                                1.1 + Math.random() * 0.3
+                            ],
+                            backgroundColor: [
+                                mockData[mockData.length - 1].fd_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff',
+                                mockData[mockData.length - 1].id_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff',
+                                mockData[mockData.length - 1].feedwater_pump_vibration > 1.8 ? '#f39c12' : '#00d2ff',
+                                mockData[mockData.length - 1].turbine_vibration > 1.5 ? '#f39c12' : '#00d2ff',
+                                '#00d2ff'
+                            ]
+                        },
+                        {
+                            label: 'حد مجاز (mm/s)',
+                            data: [2.0, 2.0, 1.8, 1.5, 1.5],
+                            type: 'line',
+                            borderColor: '#2ecc71',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'لرزش (mm/s)'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // نمودار توزیع انرژی
+            const energyCtx = document.getElementById('energyDistributionChart').getContext('2d');
+            charts.energy = new Chart(energyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['واحد متانول', 'واحد آمونیاک', 'یوتیلیتی', 'آب‌سازی', 'اداری', 'سایر'],
+                    datasets: [{
+                        data: [45, 38, 22, 15, 5, 8],
+                        backgroundColor: [
+                            '#00d2ff',
+                            '#2ecc71',
+                            '#ff9f43',
+                            '#9b59b6',
+                            '#3498db',
+                            '#95a5a6'
+                        ],
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'left',
+                            labels: {
+                                font: { size: 10 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.label}: ${context.raw} MW`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // مخفی کردن نمودارهای غیرفعال
+            hideInactiveCharts();
+        }
+
+function hideInactiveCharts() {
+    const chartDisplays = document.querySelectorAll('.chart-display');
+    chartDisplays.forEach((wrapper, index) => {
+        const canvas = wrapper.querySelector('canvas');
+
+        if (canvas.id === `${activeChartTab}Chart`) {
+            wrapper.classList.add('active');
+        } else {
+            wrapper.classList.remove('active');
+        }
+    });
+}
+
+
+        // ==================== چت بات ====================
+        function initUIEvents() {
+            // تب‌های نمودار
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeChartTab = this.dataset.chart;
+                    hideInactiveCharts();
+                });
+            });
+
+            // تب‌های هشدار
+            document.querySelectorAll('.alert-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.alert-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeAlertTab = this.dataset.alert;
+                    filterAlerts();
+                });
+            });
+
+            // دکمه ارسال چت
+            document.getElementById('sendButton').addEventListener('click', sendMessageFromInput);
+
+            // ورودی چت با کلید Enter
+            document.getElementById('chatInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    sendMessageFromInput();
+                }
+            });
+        }
+
+        function sendMessageFromInput() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (message) {
+                sendMessage(message);
+                input.value = '';
+            }
+        }
+
+        function sendMessage(message) {
+            const display = document.getElementById('chatDisplay');
+
+            // نمایش پیام کاربر
+            const userMsg = document.createElement('div');
+            userMsg.className = 'msg user';
+            userMsg.innerHTML = `
+            <div>${message}</div>
+            <div class="msg-time">هم اکنون</div>
+        `;
+            display.appendChild(userMsg);
+
+            // اسکرول به پایین
+            display.scrollTop = display.scrollHeight;
+
+            // شبیه‌سازی تاخیر پردازش
+            setTimeout(() => {
+                generateAIResponse(message);
+            }, 800);
+        }
+
+        function generateAIResponse(userMessage) {
+            const display = document.getElementById('chatDisplay');
+            const latestData = mockData[mockData.length - 1];
+            let response = '';
+
+            // پاسخ‌های از پیش تعریف شده بر اساس سوال کاربر
+            if (userMessage.includes('فشار') || userMessage.includes('pressure')) {
+                response = `فشار درام بویلر در حال حاضر ${latestData.boiler_drum_pressure.toFixed(1)} بار است. فشار هدر HP برابر ${latestData.hp_steam_header_pressure.toFixed(1)} بار می‌باشد. نمودار فشار نشان می‌دهد که در ۴ ساعت گذشته روند نسبتاً پایداری داشته‌ایم.`;
+
+                // اضافه کردن پیش‌بینی
+                response += ` مدل AI پیش‌بینی می‌کند در ۲ ساعت آینده فشار به ${(latestData.hp_steam_header_pressure - 0.5).toFixed(1)} بار کاهش یابد.`;
+            }
+            else if (userMessage.includes('دما') || userMessage.includes('temperature')) {
+                response = `دمای فعلی بخار سوپرهیت ${latestData.superheated_steam_temp.toFixed(1)}°C و دمای flue gas برابر ${latestData.flue_gas_temp.toFixed(1)}°C است.`;
+
+                if (latestData.flue_gas_temp > 290) {
+                    response += ` توجه: دمای flue gas از حد بهینه (۲۹۰°C) بالاتر است که نشان‌دهنده اتلاف حرارتی یا نیاز به تمیزکاری لوله‌ها می‌باشد.`;
+                } else {
+                    response += ` دمای flue gas در محدوده بهینه قرار دارد.`;
+                }
+            }
+            else if (userMessage.includes('لرزش') || userMessage.includes('vibration')) {
+                response = `لرزش فعلی فن ID: ${latestData.id_fan_vibration.toFixed(2)} mm/s (حد مجاز: ۲٫۰ mm/s). `;
+
+                if (latestData.id_fan_vibration > 2.0) {
+                    response += `این مقدار فراتر از حد مجاز است. بررسی بالانس پره‌ها و یاتاقان‌ها توصیه می‌شود. لرزش فن FD نیز ${latestData.fd_fan_vibration.toFixed(2)} mm/s است که در محدوده مجاز قرار دارد.`;
+                } else {
+                    response += `این مقدار در محدوده مجاز است. لرزش فن FD نیز ${latestData.fd_fan_vibration.toFixed(2)} mm/s می‌باشد.`;
+                }
+            }
+            else if (userMessage.includes('راندمان') || userMessage.includes('efficiency')) {
+                response = `راندمان فعلی بویلر: ${latestData.boiler_efficiency.toFixed(1)}%. `;
+
+                if (latestData.boiler_efficiency > 91.5) {
+                    response += `راندمان در سطح بسیار خوبی قرار دارد. سطح اکسیژن flue gas ${latestData.flue_gas_o2.toFixed(1)}% است که در محدوده بهینه (۳-۳٫۵%) قرار دارد.`;
+                } else if (latestData.boiler_efficiency > 90.5) {
+                    response += `راندمان در سطح قابل قبولی است اما امکان بهبود تا ۹۲% وجود دارد. پیشنهاد: تنظیم نسبت هوا/سوخت و بررسی دمای flue gas.`;
+                } else {
+                    response += `راندمان نیاز به توجه دارد. علل احتمالی: رسوب در لوله‌ها، تنظیم نبودن مشعل‌ها، یا افزایش دمای flue gas.`;
+                }
+            }
+            else if (userMessage.includes('سوخت') || userMessage.includes('fuel')) {
+                response = `مصرف سوخت فعلی: ${(latestData.fuel_gas_flow / 1000).toFixed(1)} kSCFH. نسبت هوا/سوخت: ${(latestData.combustion_air_flow / latestData.fuel_gas_flow).toFixed(1)}. `;
+
+                response += `سیستم O2 Trim ${latestData.o2_trim_active ? 'فعال' : 'غیرفعال'} است. سطح اکسیژن flue gas: ${latestData.flue_gas_o2.toFixed(1)}%.`;
+            }
+            else if (userMessage.includes('هشدار') || userMessage.includes('alert')) {
+                response = `در حال حاضر ۳ هشدار فعال داریم: ۱) لرزش فن ID (بحرانی)، ۲) پیش‌بینی افت فشار بخار (پیش‌بین)، ۳) دمای بالای flue gas (هشدار). `;
+                response += `همچنین ۲ توصیه بهینه‌سازی: ۱) تنظیم نسبت هوا/سوخت، ۲) برنامه‌ریزی برای تمیزکاری لوله‌ها.`;
+            }
+            else if (userMessage.includes('برق') || userMessage.includes('power')) {
+                response = `مصرف برق کل بخش یوتیلیتی: ${latestData.power_consumption_mw.toFixed(1)} MW. بیشترین مصرف مربوط به واحد متانول (۴۵%) و سپس واحد آمونیاک (۳۸%) است. `;
+                response += `ضریب توان: ${latestData.power_factor.toFixed(2)} که در محدوده قابل قبول قرار دارد.`;
+            }
+            else if (userMessage.includes('آب') || userMessage.includes('water')) {
+                response = `سطح درام بویلر: ${latestData.boiler_drum_level.toFixed(1)}%. سطح دی‌ایراتور: ${latestData.deaerator_level.toFixed(1)}%. `;
+                response += `جریان آب تغذیه: ${latestData.feedwater_flow.toFixed(1)} T/h. کیفیت آب در محدوده استاندارد است.`;
+            }
+            else {
+                // پاسخ عمومی
+                response = `من سیگنال‌های عملیاتی بخش انرژی و یوتیلیتی را تحلیل می‌کنم. می‌توانید درباره فشار بخار، دماها، لرزش تجهیزات، راندمان، مصرف سوخت، هشدارها یا هر پارامتر دیگر سوال کنید. `;
+                response += `برای تحلیل خاص‌تر، لطفاً سوال خود را دقیق‌تر مطرح نمایید.`;
+            }
+
+            // اضافه کردن پیام AI
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'msg ai';
+            aiMsg.innerHTML = `
+            <div>${response}</div>
+            <div class="msg-time">هم اکنون</div>
+        `;
+            display.appendChild(aiMsg);
+
+            // اسکرول به پایین
+            display.scrollTop = display.scrollHeight;
+        }
+
+        function filterAlerts() {
+            const alerts = document.querySelectorAll('.alert-card');
+
+            alerts.forEach(alert => {
+                if (activeAlertTab === 'all' || alert.dataset.type === activeAlertTab) {
+                    alert.style.display = 'flex';
+                } else {
+                    alert.style.display = 'none';
+                }
+            });
+        }
+
+        // ==================== شبیه‌سازی داده‌های زنده ====================
+        function startLiveDataSimulation() {
+            // به‌روزرسانی KPI هر 5 ثانیه
+            setInterval(() => {
+                updateLiveData();
+                createKPICards();
+            }, 5000);
+
+            // به‌روزرسانی زمان آخرین به‌روزرسانی
+            setInterval(() => {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('updateTime').textContent = timeStr;
+            }, 1000);
+        }
+
+        function updateLiveData() {
+            // شبیه‌سازی تغییرات کوچک در داده‌ها
+            const lastIndex = mockData.length - 1;
+            const newData = { ...mockData[lastIndex] };
+            newData.timestamp = new Date().toISOString();
+
+            // اضافه کردن نوسانات کوچک
+            newData.boiler_drum_pressure += (Math.random() * 0.4 - 0.2);
+            newData.boiler_efficiency += (Math.random() * 0.2 - 0.1);
+            newData.fuel_gas_flow += (Math.random() * 20 - 10);
+            newData.flue_gas_temp += (Math.random() * 2 - 1);
+            newData.id_fan_vibration += (Math.random() * 0.1 - 0.05);
+
+            // محدود کردن مقادیر
+            newData.boiler_drum_pressure = Math.max(117, Math.min(119.5, newData.boiler_drum_pressure));
+            newData.boiler_efficiency = Math.max(89.5, Math.min(92.5, newData.boiler_efficiency));
+            newData.id_fan_vibration = Math.max(1.5, Math.min(2.5, newData.id_fan_vibration));
+
+            // اضافه کردن داده جدید
+            mockData.push(newData);
+
+            // حفظ اندازه آرایه
+            if (mockData.length > 300) {
+                mockData.shift();
+            }
+
+            // به‌روزرسانی نمودارها
+            updateChartsWithLiveData();
+        }
+
+        function updateChartsWithLiveData() {
+            // به‌روزرسانی نمودار فشار
+            if (charts.pressure) {
+                const latestData = mockData.slice(-24);
+                charts.pressure.data.datasets[0].data = latestData.map(d => d.boiler_drum_pressure);
+                charts.pressure.data.datasets[1].data = latestData.map(d => d.hp_steam_header_pressure);
+                charts.pressure.update('none');
+            }
+
+            // به‌روزرسانی نمودار لرزش
+            if (charts.vibration) {
+                const latest = mockData[mockData.length - 1];
+                charts.vibration.data.datasets[0].data[1] = latest.id_fan_vibration;
+                charts.vibration.data.datasets[0].backgroundColor[1] = latest.id_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff';
+                charts.vibration.update('none');
+            }
+        }
+    </script>
+</body>
+
+</html>
