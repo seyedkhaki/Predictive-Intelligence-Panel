@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-powered Industrial Operations Dashboard - Industrial Monitoring & Predictive Analytics</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous">
+    <style>
+        :root {
+            --bg: #080c14;
+            --panel: #111722;
+            --border: #222d3d;
+            --primary: #00d2ff;
+            --primary-dark: #0099cc;
+            --accent: #ff9f43;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #ee5253;
+            --info: #54a0ff;
+            --text: #f1f2f6;
+            --muted: #a4b0be;
+            --gradient-primary: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --gradient-accent: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+            --gradient-success: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            height: 70px;
+            background: linear-gradient(90deg, #111722 0%, #1a2332 100%);
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container {
+            background: var(--gradient-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .header-title h1 {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header-title span {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        .time-display {
+            font-size: 0.85rem;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+
+        /* Main Grid Layout */
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 1.1fr 1.6fr 0.9fr;
+            gap: 12px;
+            padding: 12px;
+            height: calc(100vh - 70px);
+            overflow: auto;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: auto;
+        }
+
+        /* Components */
+        .widget {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .widget:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .widget-title {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .widget-title i {
+            margin-left: 6px;
+        }
+
+        .widget-subtitle {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            background: rgba(0, 210, 255, 0.05);
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        .kpi-card .label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .kpi-card .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .kpi-card .unit {
+            font-size: 0.7rem;
+            color: var(--primary);
+        }
+
+        .kpi-card .trend {
+            font-size: 0.65rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .trend.up {
+            color: var(--success);
+        }
+
+        .trend.down {
+            color: var(--danger);
+        }
+
+        /* Chart Canvas Constraints */
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .chart-display {
+            display: none;
+            height: 100%;
+        }
+
+        .chart-display.active {
+            display: block;
+        }
+
+        /* Alert Section */
+        .alert-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .alert-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .alert-tab {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .alert-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .alert-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 3px;
+        }
+
+        .alert-card {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 3px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .alert-card:hover {
+            transform: translateX(-3px);
+        }
+
+        .alert-card.critical {
+            border-color: var(--danger);
+            background: rgba(238, 82, 83, 0.08);
+            animation: pulse-alert 2s infinite;
+        }
+
+        .alert-card.warning {
+            border-color: var(--warning);
+            background: rgba(243, 156, 18, 0.08);
+        }
+
+        .alert-card.predictive {
+            border-color: var(--accent);
+            background: rgba(255, 159, 67, 0.08);
+        }
+
+        .alert-card.info {
+            border-color: var(--primary);
+            background: rgba(0, 210, 255, 0.08);
+        }
+
+        .alert-card .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-card .alert-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .alert-card .alert-time {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        @keyframes pulse-alert {
+            0% {
+                box-shadow: 0 0 0 0 rgba(238, 82, 83, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 5px rgba(238, 82, 83, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(238, 82, 83, 0);
+            }
+        }
+
+        /* Chatbot UI */
+        .chat-widget {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(160deg, #0f1520 0%, #141b29 100%);
+            border-color: var(--primary);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+        }
+
+        .chat-title {
+            font-size: 1rem;
+            color: var(--primary);
+        }
+
+        .chat-subtitle {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chatDisplay {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .msg {
+            max-width: 85%;
+            margin-bottom: 0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+
+        .msg.ai {
+            background: rgba(26, 35, 50, 0.8);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-top-right-radius: 4px;
+        }
+
+        .msg.user {
+            background: var(--gradient-primary);
+            color: #fff;
+            align-self: flex-end;
+            border-top-left-radius: 4px;
+        }
+
+        .msg .msg-time {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            text-align: left;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        input#chatInput {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        input#chatInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+        }
+
+        button#sendButton {
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+            padding: 0 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        button#sendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .chat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .chat-chip {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-chip:hover {
+            background: rgba(0, 210, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Equipment Status */
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .equipment-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .equipment-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .equipment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .equipment-status {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .status-online {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success);
+        }
+
+        .status-warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning);
+        }
+
+        .status-offline {
+            background: rgba(238, 82, 83, 0.1);
+            color: var(--danger);
+        }
+
+        /* Tabs */
+        .chart-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .chart-tab {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .chart-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #39465e;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .column {
+                min-height: 400px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                height: auto;
+                flex-direction: column;
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .header-left,
+            .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .widget-title {
+                font-size: 0.85rem;
+            }
+
+            .msg {
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .equipment-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-tabs {
+                flex-wrap: wrap;
+            }
+
+            .chart-tab {
+                flex: 1;
+                text-align: center;
+                padding: 8px 5px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Utility Classes */
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-muted {
+            color: var(--muted);
+        }
+
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+
+        .mt-10 {
+            margin-top: 10px;
+        }
+
+        .mt-15 {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="dashboard-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div class="header-title">
+                <h1>AI-powered Industrial Operations Dashboard</h1>
+                <span>Industrial Monitoring &amp; Predictive Analytics</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>System Status: Active (Real-time)</span>
+            </div>
+            <div class="time-display" id="currentTime">
+                <!-- Time is populated by JS -->
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-wrapper">
+        <!-- Column 1: KPI and Equipment Health -->
+        <div class="column">
+            <!-- KPI Cards -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-line"></i> Key Performance Indicators (KPI)</span>
+                    <span class="text-muted" style="font-size: 0.75rem;">Last Update: <span id="updateTime">Just now</span></span>
+                </div>
+                <div class="kpi-grid" id="kpiContainer">
+                    <!-- KPIs are generated by JS -->
+                </div>
+            </div>
+
+            <!-- Equipment Health -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-heartbeat"></i> Main Equipment Health</span>
+                    <div class="widget-subtitle">Based on Predictive Analysis</div>
+                </div>
+                <div class="equipment-grid">
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(0, 210, 255, 0.1); color: var(--primary);">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">Boiler #1</div>
+                        <div class="equipment-status status-online">Optimal</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-fan"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">ID Fan</div>
+                        <div class="equipment-status status-warning">Needs Inspection</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(0, 210, 255, 0.1); color: var(--primary);">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">Feed Pump</div>
+                        <div class="equipment-status status-online">Normal</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">Air Compressor</div>
+                        <div class="equipment-status status-online">Normal</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(243, 156, 18, 0.1); color: var(--warning);">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">Turbine</div>
+                        <div class="equipment-status status-warning">High Temp</div>
+                    </div>
+                    <div class="equipment-item">
+                        <div class="equipment-icon" style="background: rgba(46, 204, 113, 0.1); color: var(--success);">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div style="font-size: 0.8rem;">Generator</div>
+                        <div class="equipment-status status-online">Normal</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment Health Radar Chart -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-radar"></i> Comprehensive Equipment Health Analysis</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: Main Charts -->
+        <div class="column">
+            <!-- Chart Tabs -->
+            <div class="widget">
+                <div class="chart-tabs">
+                    <div class="chart-tab active" data-chart="pressure">Steam Pressure</div>
+                    <div class="chart-tab" data-chart="temperature">Temperatures</div>
+                    <div class="chart-tab" data-chart="flow">Flows</div>
+                    <div class="chart-tab" data-chart="efficiency">Efficiency</div>
+                    <div class="chart-tab" data-chart="vibration">Vibrations</div>
+                </div>
+
+<div class="chart-container">
+
+    <div class="chart-display active">
+        <canvas id="pressureChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="temperatureChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="flowChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="efficiencyChart"></canvas>
+    </div>
+
+    <div class="chart-display">
+        <canvas id="vibrationChart"></canvas>
+    </div>
+
+</div>
+
+            </div>
+
+            <!-- Energy Distribution Chart -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span><i class="fas fa-chart-pie"></i> Energy Load Distribution by Unit</span>
+                    <div class="widget-subtitle">Power Consumption (MW) - Real-time</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="energyDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Alerts and Chatbot -->
+        <div class="column">
+            <!-- Smart Alerts -->
+            <div class="widget alert-section">
+                <div class="widget-title">
+                    <span><i class="fas fa-exclamation-triangle"></i> Smart & Predictive Alerts</span>
+                    <div class="widget-subtitle">AI-Based Analysis</div>
+                </div>
+
+                <div class="alert-tabs">
+                    <div class="alert-tab active" data-alert="all">All</div>
+                    <div class="alert-tab" data-alert="critical">Critical</div>
+                    <div class="alert-tab" data-alert="predictive">Predictive</div>
+                    <div class="alert-tab" data-alert="optimization">Optimization</div>
+                </div>
+
+                <div class="alert-list" id="alertList">
+                    <!-- Alerts are generated by JS -->
+                </div>
+            </div>
+
+            <!-- Smart Chatbot -->
+            <div class="widget chat-widget">
+                <div class="chat-header">
+                    <div class="chat-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="chat-title">Smart Engineering Assistant (RAG)</div>
+                        <div class="chat-subtitle">Technical queries about all signals and charts</div>
+                    </div>
+                </div>
+
+                <div class="chat-area">
+                    <div id="chatDisplay">
+                        <div class="msg ai">
+                            <div>Hello! I am the smart assistant for this panel. I can analyze all charts and operational data and answer your technical questions.</div>
+                            <div class="msg-time">Just now</div>
+                        </div>
+                        <div class="msg ai">
+                            <div>To get started, click one of the chips below or type your question.</div>
+                            <div class="msg-time">Just now</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-chips" id="chatChips">
+                        <!-- Chips are generated by JS -->
+                    </div>
+
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput"
+                            placeholder="Ask your technical question (e.g.: analyze steam pressure over the last 24 hours)"
+                            autocomplete="off">
+                        <button id="sendButton"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Global Variables ====================
+        let mockData = [];
+        let charts = {};
+        let activeChartTab = 'pressure';
+        let activeAlertTab = 'all';
+
+        // ==================== Comprehensive Mock Data ====================
+        function generateMockData() {
+            const baseTime = new Date('2025-12-11T00:00:00');
+            const data = [];
+
+            // Generate 48 hours of data (one record every 10 minutes)
+            for (let i = 0; i < 288; i++) {
+                const timestamp = new Date(baseTime.getTime() + i * 10 * 60 * 1000);
+                const hour = timestamp.getHours();
+                const minute = timestamp.getMinutes();
+
+                // Natural fluctuations in data
+                const timeFactor = Math.sin(hour * Math.PI / 12) * 0.5 + 0.5;
+                const randomFactor = 0.95 + Math.random() * 0.1;
+
+                data.push({
+                    timestamp: timestamp.toISOString(),
+                    // Boiler and steam generation
+                    boiler_drum_level: 50 + (Math.sin(i / 20) * 3) + (Math.random() * 2 - 1),
+                    boiler_drum_pressure: 118 + (Math.sin(i / 30) * 0.5) + (Math.random() * 0.2 - 0.1),
+                    superheated_steam_temp: 448 + (Math.sin(i / 40) * 5) + (Math.random() * 2 - 1),
+                    feedwater_flow: 285 + (Math.sin(i / 25) * 10) + (Math.random() * 5 - 2.5),
+                    fuel_gas_flow: 2450 + (Math.sin(i / 35) * 100) + (Math.random() * 50 - 25),
+                    combustion_air_flow: 28500 + (Math.sin(i / 30) * 1000) + (Math.random() * 500 - 250),
+                    flue_gas_o2: 3.2 + (Math.sin(i / 50) * 0.3) + (Math.random() * 0.2 - 0.1),
+                    flue_gas_temp: 285 + (Math.sin(i / 45) * 10) + (Math.random() * 5 - 2.5),
+                    boiler_efficiency: 91 + (Math.sin(i / 60) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    steam_production: 280 + (Math.sin(i / 30) * 15) + (Math.random() * 8 - 4),
+
+                    // Steam system
+                    hp_steam_header_pressure: 115.5 + (Math.sin(i / 25) * 1) + (Math.random() * 0.5 - 0.25),
+                    mp_steam_header_pressure: 42 + (Math.sin(i / 30) * 2) + (Math.random() * 1 - 0.5),
+                    lp_steam_header_pressure: 8.5 + (Math.sin(i / 35) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    condensate_return_flow: 210 + (Math.sin(i / 40) * 20) + (Math.random() * 10 - 5),
+
+                    // Industrial and feedwater
+                    deaerator_level: 68 + (Math.sin(i / 50) * 5) + (Math.random() * 3 - 1.5),
+                    dm_water_tank_level: 72 + (Math.sin(i / 55) * 4) + (Math.random() * 2 - 1),
+                    feedwater_ph: 9.2 + (Math.random() * 0.2 - 0.1),
+                    feedwater_conductivity: 5.5 + (Math.random() * 1 - 0.5),
+
+                    // Compressed air and nitrogen
+                    instrument_air_pressure: 8.0 + (Math.sin(i / 60) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    nitrogen_pressure: 7.8 + (Math.sin(i / 65) * 0.3) + (Math.random() * 0.2 - 0.1),
+                    instrument_air_dewpoint: -45 + (Math.random() * 5 - 2.5),
+
+                    // Power and energy
+                    power_consumption_mw: 12 + (Math.sin(i / 20) * 2) + (Math.random() * 1 - 0.5),
+                    power_factor: 0.92 + (Math.random() * 0.04 - 0.02),
+                    turbine_vibration: 1.2 + (Math.sin(i / 70) * 0.3) + (Math.random() * 0.2 - 0.1),
+
+                    // Vibrations
+                    fd_fan_vibration: 2.1 + (Math.sin(i / 80) * 0.4) + (Math.random() * 0.3 - 0.15),
+                    id_fan_vibration: 1.8 + (Math.sin(i / 75) * 0.5) + (Math.random() * 0.3 - 0.15),
+                    feedwater_pump_vibration: 1.5 + (Math.sin(i / 85) * 0.3) + (Math.random() * 0.2 - 0.1),
+
+                    // Equipment status
+                    feedwater_pump_status: "ON",
+                    fd_fan_status: "ON",
+                    id_fan_status: "ON",
+                    burner_1_status: "ON",
+                    burner_2_status: "ON",
+                    flame_detector_ok: true,
+                    low_water_cutoff: false,
+                    high_pressure_trip: false,
+                    o2_trim_active: true,
+
+                    // Status and AI insights
+                    status_label: i > 200 && i < 220 ? "Warning" : "Normal",
+                    ai_insight: i > 200 && i < 220 ? "Abnormal increase in flue gas temperature detected. Please investigate." : "All parameters within optimal range"
+                });
+            }
+
+            return data;
+        }
+
+        // ==================== Initial Setup ====================
+        document.addEventListener('DOMContentLoaded', function () {
+            // Generate data
+            mockData = generateMockData();
+
+            // Set current time
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+
+            // Create KPI cards
+            createKPICards();
+
+            // Create alerts
+            createAlerts();
+
+            // Create chat chips
+            createChatChips();
+
+            // Initialize charts
+            initCharts();
+
+            // Initialize UI events
+            initUIEvents();
+
+            // Start live data simulation
+            startLiveDataSimulation();
+        });
+
+        // ==================== Utility Functions ====================
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US');
+            const dateStr = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('currentTime').innerHTML = `${dateStr} - ${timeStr}`;
+        }
+
+        function createKPICards() {
+            const latestData = mockData[mockData.length - 1];
+            const previousData = mockData[mockData.length - 2];
+
+            const kpis = [
+                {
+                    id: 'kpi-efficiency',
+                    label: 'Boiler Efficiency',
+                    value: latestData.boiler_efficiency.toFixed(1),
+                    unit: '%',
+                    icon: 'fas fa-percentage',
+                    trend: latestData.boiler_efficiency > previousData.boiler_efficiency ? 'up' : 'down',
+                    change: Math.abs(latestData.boiler_efficiency - previousData.boiler_efficiency).toFixed(2)
+                },
+                {
+                    id: 'kpi-steam',
+                    label: 'Steam Production',
+                    value: latestData.steam_production.toFixed(0),
+                    unit: 'T/h',
+                    icon: 'fas fa-fire',
+                    trend: latestData.steam_production > previousData.steam_production ? 'up' : 'down',
+                    change: Math.abs(latestData.steam_production - previousData.steam_production).toFixed(1)
+                },
+                {
+                    id: 'kpi-pressure',
+                    label: 'Steam Pressure HP',
+                    value: latestData.hp_steam_header_pressure.toFixed(1),
+                    unit: 'Bar',
+                    icon: 'fas fa-tachometer-alt',
+                    trend: latestData.hp_steam_header_pressure > previousData.hp_steam_header_pressure ? 'up' : 'down',
+                    change: Math.abs(latestData.hp_steam_header_pressure - previousData.hp_steam_header_pressure).toFixed(1)
+                },
+                {
+                    id: 'kpi-fuel',
+                    label: 'Fuel Consumption',
+                    value: (latestData.fuel_gas_flow / 1000).toFixed(1),
+                    unit: 'kSCFH',
+                    icon: 'fas fa-gas-pump',
+                    trend: latestData.fuel_gas_flow > previousData.fuel_gas_flow ? 'up' : 'down',
+                    change: Math.abs(latestData.fuel_gas_flow - previousData.fuel_gas_flow).toFixed(0)
+                },
+                {
+                    id: 'kpi-power',
+                    label: 'Power Consumption',
+                    value: latestData.power_consumption_mw.toFixed(1),
+                    unit: 'MW',
+                    icon: 'fas fa-bolt',
+                    trend: latestData.power_consumption_mw > previousData.power_consumption_mw ? 'up' : 'down',
+                    change: Math.abs(latestData.power_consumption_mw - previousData.power_consumption_mw).toFixed(1)
+                },
+                {
+                    id: 'kpi-o2',
+                    label: 'Flue Gas Oxygen',
+                    value: latestData.flue_gas_o2.toFixed(1),
+                    unit: '%',
+                    icon: 'fas fa-wind',
+                    trend: latestData.flue_gas_o2 > previousData.flue_gas_o2 ? 'up' : 'down',
+                    change: Math.abs(latestData.flue_gas_o2 - previousData.flue_gas_o2).toFixed(1)
+                }
+            ];
+
+            const container = document.getElementById('kpiContainer');
+            container.innerHTML = '';
+
+            kpis.forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                card.id = kpi.id;
+
+                card.innerHTML = `
+                <div class="label"><i class="${kpi.icon}"></i> ${kpi.label}</div>
+                <div class="value">${kpi.value}</div>
+                <div class="unit">${kpi.unit}</div>
+                <div class="trend ${kpi.trend}">
+                    <i class="fas fa-arrow-${kpi.trend === 'up' ? 'up' : 'down'}"></i>
+                    ${kpi.change} ${kpi.unit.replace('%', '')}
+                </div>
+            `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function createAlerts() {
+            const alerts = [
+                {
+                    type: 'critical',
+                    title: 'ID Fan Bearing Vibration',
+                    time: '2 minutes ago',
+                    description: 'ID fan bearing vibration has reached 2.4mm/s, exceeding the allowable limit (2.0mm/s). Immediate inspection is recommended.',
+                    equipment: 'ID Fan - Boiler #1'
+                },
+                {
+                    type: 'predictive',
+                    title: 'Predicted Steam Pressure Drop',
+                    time: '15 minutes ago',
+                    description: 'The AI model predicts steam pressure will drop to 116.8 bar in the next 2 hours (82% probability). Reason: fluctuation in inlet gas flow.',
+                    equipment: 'HP Steam Header'
+                },
+                {
+                    type: 'warning',
+                    title: 'High Flue Gas Temperature',
+                    time: '1 hour ago',
+                    description: 'Flue gas temperature has reached 295°C (limit: 290°C). Boiler tube cleaning should be scheduled for next week.',
+                    equipment: 'Boiler #1'
+                },
+                {
+                    type: 'info',
+                    title: 'Increased Fuel Consumption',
+                    time: '2 hours ago',
+                    description: 'Fuel consumption has increased by 3% while steam production remained constant. Reviewing the air/fuel ratio is recommended.',
+                    equipment: 'Combustion System'
+                },
+                {
+                    type: 'predictive',
+                    title: 'Predicted Efficiency Decrease',
+                    time: '3 hours ago',
+                    description: 'Boiler efficiency is predicted to drop to 90.2% within the next 8 hours. Probable cause: increased scaling in the tubes.',
+                    equipment: 'Boiler #1'
+                },
+                {
+                    type: 'info',
+                    title: 'Water Quality Monitoring',
+                    time: '4 hours ago',
+                    description: 'Feedwater electrical conductivity has risen to 7 µS/cm. It is time for a controlled blowdown.',
+                    equipment: 'Feedwater System'
+                }
+            ];
+
+            const container = document.getElementById('alertList');
+            container.innerHTML = '';
+
+            alerts.forEach(alert => {
+                const alertEl = document.createElement('div');
+                alertEl.className = `alert-card ${alert.type}`;
+                alertEl.dataset.type = alert.type;
+
+                alertEl.innerHTML = `
+                <div class="alert-header">
+                    <div class="alert-title">
+                        <i class="fas fa-${alert.type === 'critical' ? 'exclamation-circle' : alert.type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                        ${alert.title}
+                    </div>
+                    <div class="alert-time">${alert.time}</div>
+                </div>
+                <div>${alert.description}</div>
+                <div style="font-size: 0.7rem; color: var(--muted); margin-top: 5px;">
+                    <i class="fas fa-cog"></i> ${alert.equipment}
+                </div>
+            `;
+
+                container.appendChild(alertEl);
+            });
+        }
+
+        function createChatChips() {
+            const chips = [
+                "Analyze today's steam pressure",
+                "Cause of increased fuel consumption",
+                "Fan vibration status",
+                "Predict tomorrow's efficiency",
+                "Current critical alerts",
+                "Flue Gas temperature chart",
+                "Boiler water quality",
+                "Unit power consumption",
+                "Main equipment status",
+                "Optimization suggestions"
+            ];
+
+            const container = document.getElementById('chatChips');
+            container.innerHTML = '';
+
+            chips.forEach(chipText => {
+                const chip = document.createElement('div');
+                chip.className = 'chat-chip';
+                chip.textContent = chipText;
+                chip.addEventListener('click', () => {
+                    sendMessage(chipText);
+                });
+                container.appendChild(chip);
+            });
+        }
+
+        // ==================== Charts ====================
+        function initCharts() {
+            // Global Chart.js settings
+            Chart.defaults.color = '#a4b0be';
+            Chart.defaults.font.family = 'Segoe UI';
+            Chart.defaults.font.size = 11;
+
+            // Equipment health radar chart
+            const radarCtx = document.getElementById('radarChart').getContext('2d');
+            charts.radar = new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Oil Temp', 'Vibration', 'Noise', 'Voltage', 'Lubrication', 'Performance'],
+                    datasets: [
+                        {
+                            label: 'Main Compressor',
+                            data: [85, 40, 70, 90, 88, 82],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            pointBackgroundColor: '#2ecc71'
+                        },
+                        {
+                            label: 'Feed Pump',
+                            data: [75, 65, 60, 85, 80, 78],
+                            borderColor: '#00d2ff',
+                            backgroundColor: 'rgba(0, 210, 255, 0.2)',
+                            pointBackgroundColor: '#00d2ff'
+                        },
+                        {
+                            label: 'Turbine',
+                            data: [70, 75, 65, 88, 82, 80],
+                            borderColor: '#ff9f43',
+                            backgroundColor: 'rgba(255, 159, 67, 0.2)',
+                            pointBackgroundColor: '#ff9f43'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            grid: { color: '#222d3d' },
+                            angleLines: { color: '#222d3d' },
+                            ticks: { backdropColor: 'transparent' },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Steam pressure chart
+            const pressureCtx = document.getElementById('pressureChart').getContext('2d');
+            const timeLabels = mockData.slice(-24).map(d => {
+                const date = new Date(d.timestamp);
+                return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+            });
+
+            charts.pressure = new Chart(pressureCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Boiler Drum Pressure',
+                            data: mockData.slice(-24).map(d => d.boiler_drum_pressure),
+                            borderColor: '#00d2ff',
+                            backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'HP Header Pressure',
+                            data: mockData.slice(-24).map(d => d.hp_steam_header_pressure),
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'MP Header Pressure',
+                            data: mockData.slice(-24).map(d => d.mp_steam_header_pressure || 42 + Math.random()),
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Pressure (Bar)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Temperature chart
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            charts.temperature = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Superheated Steam Temperature',
+                            data: mockData.slice(-24).map(d => d.superheated_steam_temp),
+                            borderColor: '#ee5253',
+                            backgroundColor: 'rgba(238, 82, 83, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Flue Gas Temperature',
+                            data: mockData.slice(-24).map(d => d.flue_gas_temp),
+                            borderColor: '#ff9f43',
+                            backgroundColor: 'rgba(255, 159, 67, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Feedwater Temperature',
+                            data: mockData.slice(-24).map(d => 215 + Math.sin(new Date(d.timestamp).getHours() / 2) * 5 + Math.random() * 3),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Flow chart
+            const flowCtx = document.getElementById('flowChart').getContext('2d');
+            charts.flow = new Chart(flowCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Fuel Flow',
+                            data: mockData.slice(-24).map(d => d.fuel_gas_flow / 1000),
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Air Flow',
+                            data: mockData.slice(-24).map(d => d.combustion_air_flow / 1000),
+                            borderColor: '#1abc9c',
+                            backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Feedwater Flow',
+                            data: mockData.slice(-24).map(d => d.feedwater_flow),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Fuel/Air Flow (kSCFH)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: 'Water Flow (T/h)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Efficiency chart
+            const efficiencyCtx = document.getElementById('efficiencyChart').getContext('2d');
+            charts.efficiency = new Chart(efficiencyCtx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Boiler Efficiency',
+                            data: mockData.slice(-24).map(d => d.boiler_efficiency),
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Flue Gas Oxygen',
+                            data: mockData.slice(-24).map(d => d.flue_gas_o2),
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Efficiency (%)'
+                            },
+                            min: 89,
+                            max: 93
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: 'Oxygen (%)'
+                            },
+                            min: 2.5,
+                            max: 4.0
+                        }
+                    }
+                }
+            });
+
+            // Vibration chart
+            const vibrationCtx = document.getElementById('vibrationChart').getContext('2d');
+            charts.vibration = new Chart(vibrationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['FD Fan', 'ID Fan', 'Feed Pump', 'Turbine', 'Compressor'],
+                    datasets: [
+                        {
+                            label: 'Current Vibration (mm/s)',
+                            data: [
+                                mockData[mockData.length - 1].fd_fan_vibration,
+                                mockData[mockData.length - 1].id_fan_vibration,
+                                mockData[mockData.length - 1].feedwater_pump_vibration,
+                                mockData[mockData.length - 1].turbine_vibration,
+                                1.1 + Math.random() * 0.3
+                            ],
+                            backgroundColor: [
+                                mockData[mockData.length - 1].fd_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff',
+                                mockData[mockData.length - 1].id_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff',
+                                mockData[mockData.length - 1].feedwater_pump_vibration > 1.8 ? '#f39c12' : '#00d2ff',
+                                mockData[mockData.length - 1].turbine_vibration > 1.5 ? '#f39c12' : '#00d2ff',
+                                '#00d2ff'
+                            ]
+                        },
+                        {
+                            label: 'Allowable Limit (mm/s)',
+                            data: [2.0, 2.0, 1.8, 1.5, 1.5],
+                            type: 'line',
+                            borderColor: '#2ecc71',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Vibration (mm/s)'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Energy distribution chart
+            const energyCtx = document.getElementById('energyDistributionChart').getContext('2d');
+            charts.energy = new Chart(energyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Methanol Unit', 'Ammonia Unit', 'Utilities', 'Water Treatment', 'Administration', 'Other'],
+                    datasets: [{
+                        data: [45, 38, 22, 15, 5, 8],
+                        backgroundColor: [
+                            '#00d2ff',
+                            '#2ecc71',
+                            '#ff9f43',
+                            '#9b59b6',
+                            '#3498db',
+                            '#95a5a6'
+                        ],
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'left',
+                            labels: {
+                                font: { size: 10 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.label}: ${context.raw} MW`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Hide inactive charts
+            hideInactiveCharts();
+        }
+
+function hideInactiveCharts() {
+    const chartDisplays = document.querySelectorAll('.chart-display');
+    chartDisplays.forEach((wrapper, index) => {
+        const canvas = wrapper.querySelector('canvas');
+
+        if (canvas.id === `${activeChartTab}Chart`) {
+            wrapper.classList.add('active');
+        } else {
+            wrapper.classList.remove('active');
+        }
+    });
+}
+
+
+        // ==================== Chatbot ====================
+        function initUIEvents() {
+            // Chart tabs
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeChartTab = this.dataset.chart;
+                    hideInactiveCharts();
+                });
+            });
+
+            // Alert tabs
+            document.querySelectorAll('.alert-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.alert-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeAlertTab = this.dataset.alert;
+                    filterAlerts();
+                });
+            });
+
+            // Chat send button
+            document.getElementById('sendButton').addEventListener('click', sendMessageFromInput);
+
+            // Chat input with Enter key
+            document.getElementById('chatInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    sendMessageFromInput();
+                }
+            });
+        }
+
+        function sendMessageFromInput() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (message) {
+                sendMessage(message);
+                input.value = '';
+            }
+        }
+
+        function sendMessage(message) {
+            const display = document.getElementById('chatDisplay');
+
+            // Display user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'msg user';
+            userMsg.innerHTML = `
+            <div>${message}</div>
+            <div class="msg-time">Just now</div>
+        `;
+            display.appendChild(userMsg);
+
+            // Scroll to bottom
+            display.scrollTop = display.scrollHeight;
+
+            // Simulate processing delay
+            setTimeout(() => {
+                generateAIResponse(message);
+            }, 800);
+        }
+
+        function generateAIResponse(userMessage) {
+            const display = document.getElementById('chatDisplay');
+            const latestData = mockData[mockData.length - 1];
+            let response = '';
+
+            // Predefined responses based on user question
+            if (userMessage.includes('pressure')) {
+                response = `Boiler drum pressure is currently ${latestData.boiler_drum_pressure.toFixed(1)} bar. HP steam header pressure is ${latestData.hp_steam_header_pressure.toFixed(1)} bar. The pressure chart shows a relatively stable trend over the last 4 hours.`;
+
+                // Add prediction
+                response += ` The AI model predicts pressure will decrease to ${(latestData.hp_steam_header_pressure - 0.5).toFixed(1)} bar in the next 2 hours.`;
+            }
+            else if (userMessage.includes('temperature')) {
+                response = `Current superheated steam temperature is ${latestData.superheated_steam_temp.toFixed(1)}°C and flue gas temperature is ${latestData.flue_gas_temp.toFixed(1)}°C.`;
+
+                if (latestData.flue_gas_temp > 290) {
+                    response += ` Warning: Flue gas temperature exceeds the optimal limit (290°C), indicating heat loss or the need for tube cleaning.`;
+                } else {
+                    response += ` Flue gas temperature is within the optimal range.`;
+                }
+            }
+            else if (userMessage.includes('vibration')) {
+                response = `Current ID fan vibration: ${latestData.id_fan_vibration.toFixed(2)} mm/s (allowable limit: 2.0 mm/s). `;
+
+                if (latestData.id_fan_vibration > 2.0) {
+                    response += `This value exceeds the allowable limit. Checking blade balance and bearings is recommended. FD fan vibration is also ${latestData.fd_fan_vibration.toFixed(2)} mm/s, which is within the allowable range.`;
+                } else {
+                    response += `This value is within the allowable range. FD fan vibration is also ${latestData.fd_fan_vibration.toFixed(2)} mm/s.`;
+                }
+            }
+            else if (userMessage.includes('Efficiency') || userMessage.includes('efficiency')) {
+                response = `Current boiler efficiency: ${latestData.boiler_efficiency.toFixed(1)}%. `;
+
+                if (latestData.boiler_efficiency > 91.5) {
+                    response += `Efficiency is at a very good level. Flue gas oxygen level is ${latestData.flue_gas_o2.toFixed(1)}%, which is within the optimal range (3-3.5%).`;
+                } else if (latestData.boiler_efficiency > 90.5) {
+                    response += `Efficiency is at an acceptable level but can be improved up to 92%. Suggestion: Adjust the air/fuel ratio and check flue gas temperature.`;
+                } else {
+                    response += `Efficiency requires attention. Possible causes: tube scaling, untuned burners, or rising flue gas temperature.`;
+                }
+            }
+            else if (userMessage.includes('fuel')) {
+                response = `Current fuel consumption: ${(latestData.fuel_gas_flow / 1000).toFixed(1)} kSCFH. Air/fuel ratio: ${(latestData.combustion_air_flow / latestData.fuel_gas_flow).toFixed(1)}. `;
+
+                response += `The O2 Trim system is ${latestData.o2_trim_active ? 'active' : 'inactive'}. Flue gas oxygen level: ${latestData.flue_gas_o2.toFixed(1)}%.`;
+            }
+            else if (userMessage.includes('alert')) {
+                response = `We currently have 3 active alerts: 1) ID fan vibration (critical), 2) Predicted steam pressure drop (predictive), 3) High flue gas temperature (warning). `;
+                response += `There are also 2 optimization recommendations: 1) Adjust air/fuel ratio, 2) Schedule tube cleaning.`;
+            }
+            else if (userMessage.includes('power')) {
+                response = `Total utility section power consumption: ${latestData.power_consumption_mw.toFixed(1)} MW. The highest consumption is from the methanol unit (45%) followed by the ammonia unit (38%). `;
+                response += `Power factor: ${latestData.power_factor.toFixed(2)}, which is within the acceptable range.`;
+            }
+            else if (userMessage.includes('water')) {
+                response = `Boiler drum level: ${latestData.boiler_drum_level.toFixed(1)}%. Deaerator level: ${latestData.deaerator_level.toFixed(1)}%. `;
+                response += `Feedwater flow: ${latestData.feedwater_flow.toFixed(1)} T/h. Water quality is within standard range.`;
+            }
+            else {
+                // General response
+                response = `I analyze operational signals from the energy and utilities section. You can ask about steam pressure, temperatures, equipment vibration, efficiency, fuel consumption, alerts, or any other parameter. `;
+                response += `For a more specific analysis, please ask a more detailed question.`;
+            }
+
+            // Add AI message
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'msg ai';
+            aiMsg.innerHTML = `
+            <div>${response}</div>
+            <div class="msg-time">Just now</div>
+        `;
+            display.appendChild(aiMsg);
+
+            // Scroll to bottom
+            display.scrollTop = display.scrollHeight;
+        }
+
+        function filterAlerts() {
+            const alerts = document.querySelectorAll('.alert-card');
+
+            alerts.forEach(alert => {
+                if (activeAlertTab === 'all' || alert.dataset.type === activeAlertTab) {
+                    alert.style.display = 'flex';
+                } else {
+                    alert.style.display = 'none';
+                }
+            });
+        }
+
+        // ==================== Live Data Simulation ====================
+        function startLiveDataSimulation() {
+            // Update KPIs every 5 seconds
+            setInterval(() => {
+                updateLiveData();
+                createKPICards();
+            }, 5000);
+
+            // Update last update time
+            setInterval(() => {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('updateTime').textContent = timeStr;
+            }, 1000);
+        }
+
+        function updateLiveData() {
+            // Simulate small data changes
+            const lastIndex = mockData.length - 1;
+            const newData = { ...mockData[lastIndex] };
+            newData.timestamp = new Date().toISOString();
+
+            // Add small fluctuations
+            newData.boiler_drum_pressure += (Math.random() * 0.4 - 0.2);
+            newData.boiler_efficiency += (Math.random() * 0.2 - 0.1);
+            newData.fuel_gas_flow += (Math.random() * 20 - 10);
+            newData.flue_gas_temp += (Math.random() * 2 - 1);
+            newData.id_fan_vibration += (Math.random() * 0.1 - 0.05);
+
+            // Clamp values
+            newData.boiler_drum_pressure = Math.max(117, Math.min(119.5, newData.boiler_drum_pressure));
+            newData.boiler_efficiency = Math.max(89.5, Math.min(92.5, newData.boiler_efficiency));
+            newData.id_fan_vibration = Math.max(1.5, Math.min(2.5, newData.id_fan_vibration));
+
+            // Add new data
+            mockData.push(newData);
+
+            // Maintain array size
+            if (mockData.length > 300) {
+                mockData.shift();
+            }
+
+            // Update charts
+            updateChartsWithLiveData();
+        }
+
+        function updateChartsWithLiveData() {
+            // Update pressure chart
+            if (charts.pressure) {
+                const latestData = mockData.slice(-24);
+                charts.pressure.data.datasets[0].data = latestData.map(d => d.boiler_drum_pressure);
+                charts.pressure.data.datasets[1].data = latestData.map(d => d.hp_steam_header_pressure);
+                charts.pressure.update('none');
+            }
+
+            // Update vibration chart
+            if (charts.vibration) {
+                const latest = mockData[mockData.length - 1];
+                charts.vibration.data.datasets[0].data[1] = latest.id_fan_vibration;
+                charts.vibration.data.datasets[0].backgroundColor[1] = latest.id_fan_vibration > 2.0 ? '#ee5253' : '#00d2ff';
+                charts.vibration.update('none');
+            }
+        }
+    </script>
+</body>
+
+</html>
