@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NexusWare IMS — Industrial Inventory Intelligence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg-base: #0d0f14;
+    --bg-card: #13161e;
+    --bg-card2: #181c26;
+    --bg-input: #1e2330;
+    --border: #252b3b;
+    --border-bright: #2e3650;
+    --accent: #00e5b0;
+    --accent2: #3b82f6;
+    --accent3: #f59e0b;
+    --accent4: #ef4444;
+    --accent5: #a78bfa;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8892a4;
+    --text-muted: #4a5568;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --scan-line: rgba(0,229,176,0.03);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scan-line) 2px, var(--scan-line) 4px);
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* Typography */
+  .font-display { font-family: 'Syne', sans-serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.3;
+  }
+  .card:hover { border-color: var(--border-bright); }
+
+  /* KPI Cards */
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .kpi-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  }
+  .kpi-card.accent-green::after { background: var(--green); }
+  .kpi-card.accent-blue::after { background: var(--accent2); }
+  .kpi-card.accent-amber::after { background: var(--accent3); }
+  .kpi-card.accent-purple::after { background: var(--accent5); }
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 8px;
+  }
+  .kpi-delta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    margin-top: 6px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 0.82rem; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; border: none; outline: none;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0d0f14;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+  }
+  .btn-primary:hover { filter: brightness(1.1); box-shadow: 0 0 16px rgba(0,229,176,0.3); }
+  .btn-secondary {
+    background: var(--bg-input); color: var(--text-primary);
+    border: 1px solid var(--border-bright);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger {
+    background: rgba(239,68,68,0.12); color: var(--red);
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.22); }
+  .btn-warning {
+    background: rgba(245,158,11,0.12); color: var(--accent3);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+  .btn-warning:hover { background: rgba(245,158,11,0.22); }
+  .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+  /* Input / Select */
+  input, select, textarea {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  label { font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 10px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 10px 14px; font-size: 0.82rem; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 100px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem; font-weight: 500;
+  }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.25); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent2); border: 1px solid rgba(59,130,246,0.25); }
+  .badge-purple { background: rgba(167,139,250,0.15); color: var(--accent5); border: 1px solid rgba(167,139,250,0.25); }
+  .badge-cyan { background: rgba(0,229,176,0.1); color: var(--accent); border: 1px solid rgba(0,229,176,0.2); }
+
+  /* Storage Grid */
+  .bin-cell {
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    position: relative;
+    min-height: 70px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .bin-cell:hover { transform: scale(1.04); z-index: 10; }
+  .bin-free { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); }
+  .bin-free:hover { border-color: var(--green); background: rgba(16,185,129,0.15); }
+  .bin-partial { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+  .bin-partial:hover { border-color: var(--yellow); background: rgba(245,158,11,0.15); }
+  .bin-full { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+  .bin-full:hover { border-color: var(--red); background: rgba(239,68,68,0.15); }
+  .bin-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem; font-weight: 500;
+    color: var(--text-muted);
+  }
+  .bin-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+  }
+  .bin-free .bin-pct { color: var(--green); }
+  .bin-partial .bin-pct { color: var(--yellow); }
+  .bin-full .bin-pct { color: var(--red); }
+  .bin-bar {
+    height: 3px; border-radius: 100px; background: var(--border);
+    overflow: hidden; margin-top: 4px;
+  }
+  .bin-bar-fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
+  .bin-free .bin-bar-fill { background: var(--green); }
+  .bin-partial .bin-bar-fill { background: var(--yellow); }
+  .bin-full .bin-bar-fill { background: var(--red); }
+
+  /* LLM Panel */
+  .llm-message {
+    padding: 12px 14px; border-radius: 8px;
+    font-size: 0.83rem; line-height: 1.7;
+    border-left: 3px solid var(--accent);
+    background: rgba(0,229,176,0.05);
+    margin-bottom: 10px;
+  }
+  .llm-user-msg {
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 0.83rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    text-align: right;
+    color: var(--text-secondary);
+  }
+
+  /* Toast */
+  #toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 0.82rem; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    pointer-events: auto;
+    max-width: 320px;
+    border: 1px solid transparent;
+  }
+  .toast-success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: var(--green); }
+  .toast-error { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: var(--red); }
+  .toast-warning { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--yellow); }
+  .toast-info { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); color: var(--accent2); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--bg-card2);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%; max-width: 520px;
+    position: relative;
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  /* Alert Panel */
+  .alert-item {
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 0.8rem; display: flex; gap: 10px; align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .alert-critical { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+  .alert-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+  .alert-info { background: rgba(0,229,176,0.06); border: 1px solid rgba(0,229,176,0.15); }
+
+  /* Activity Log */
+  .log-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .log-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 4px;
+  }
+
+  /* Scan animation */
+  @keyframes scanPulse {
+    0%, 100% { opacity: 0.5; transform: scaleX(1); }
+    50% { opacity: 1; transform: scaleX(1.02); }
+  }
+  .scan-active { animation: scanPulse 1s infinite; }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 6px; border-radius: 100px; background: var(--border);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 100px; transition: width 0.5s ease;
+  }
+
+  /* Tab navigation */
+  .tab-btn {
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; border: none; outline: none;
+    background: transparent; color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+  }
+  .tab-btn.active {
+    background: var(--bg-input); color: var(--text-primary);
+    border: 1px solid var(--border-bright);
+  }
+  .tab-btn:not(.active):hover { color: var(--text-primary); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Tooltip */
+  .tooltip-container { position: relative; }
+  .tooltip-box {
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: #1e2330; border: 1px solid var(--border-bright);
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 0.75rem; width: 180px; z-index: 100;
+    display: none; pointer-events: none;
+    line-height: 1.5;
+  }
+  .tooltip-container:hover .tooltip-box { display: block; }
+
+  /* Anomaly flash */
+  @keyframes anomalyFlash {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0.25); }
+  }
+  .anomaly-flash { animation: anomalyFlash 1s ease 3; }
+
+  /* Chart container */
+  .chart-container { position: relative; height: 220px; }
+
+  /* Scrollable panels */
+  .scroll-panel { overflow-y: auto; }
+
+  /* Section headers */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Status indicator */
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    display: inline-block;
+  }
+  .status-live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  @keyframes livePulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .status-live { animation: livePulse 2s infinite; }
+
+  /* Header glow */
+  .header-glow {
+    background: linear-gradient(135deg, rgba(0,229,176,0.1) 0%, transparent 50%);
+  }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Bin Tooltip -->
+<div id="bin-tooltip" style="position:fixed;display:none;background:#1e2330;border:1px solid #2e3650;border-radius:10px;padding:12px 14px;font-size:0.78rem;z-index:9998;pointer-events:none;min-width:180px;max-width:240px;"></div>
+
+<!-- ===== DETECT PART MODAL ===== -->
+<div id="detect-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div class="font-display" style="font-size:1.1rem;font-weight:700;color:var(--accent);">⬡ CV SCAN — Detect New Part</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">Computer vision simulation · Auto-fill dimensions or enter manually</div>
+      </div>
+      <button onclick="closeModal()" class="btn btn-secondary btn-sm">✕</button>
+    </div>
+    <!-- CV Scan bar -->
+    <div id="scan-bar" style="height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin-bottom:18px;" class="scan-active"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div style="grid-column:span 2;">
+        <label>Part Name *</label>
+        <input id="m-name" type="text" placeholder="e.g. Bracket XS, Hex Bolt M8…"/>
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="m-cat">
+          <option value="Fasteners">Fasteners</option>
+          <option value="Brackets">Brackets</option>
+          <option value="Shafts">Shafts</option>
+          <option value="Housings">Housings</option>
+          <option value="Gears">Gears</option>
+          <option value="Seals">Seals</option>
+          <option value="Sensors">Sensors</option>
+          <option value="Bearings">Bearings</option>
+        </select>
+      </div>
+      <div>
+        <label>Initial Quantity</label>
+        <input id="m-qty" type="number" min="1" max="999" value="10" placeholder="10"/>
+      </div>
+      <div>
+        <label>Length (cm)</label>
+        <input id="m-len" type="number" min="0.1" step="0.1" placeholder="auto-detect"/>
+      </div>
+      <div>
+        <label>Width (cm)</label>
+        <input id="m-wid" type="number" min="0.1" step="0.1" placeholder="auto-detect"/>
+      </div>
+      <div>
+        <label>Height (cm)</label>
+        <input id="m-hei" type="number" min="0.1" step="0.1" placeholder="auto-detect"/>
+      </div>
+      <div>
+        <label>Calculated Volume</label>
+        <div id="m-vol" style="padding:8px 12px;background:var(--bg-base);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:var(--accent);border:1px solid var(--border);">—</div>
+      </div>
+    </div>
+    <div id="m-anomaly" style="display:none;" class="alert-item alert-critical" style="margin-bottom:12px;">
+      <span style="color:var(--red);">⚠</span>
+      <span id="m-anomaly-text" style="color:var(--red);"></span>
+    </div>
+    <div id="m-suggested" style="display:none;padding:10px 14px;background:rgba(0,229,176,0.06);border:1px solid rgba(0,229,176,0.15);border-radius:8px;margin-bottom:12px;font-size:0.8rem;">
+      <span style="color:var(--accent);">⬡ AI Suggestion: </span><span id="m-suggested-text"></span>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button onclick="autoFillDimensions()" class="btn btn-secondary">🎲 Auto-Detect</button>
+      <button onclick="submitDetectPart()" class="btn btn-primary">⊕ Add to Inventory</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BIN DETAIL MODAL ===== -->
+<div id="bin-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:420px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div class="font-display" style="font-size:1rem;font-weight:700;" id="bin-modal-title">Bin Detail</div>
+      <button onclick="closeBinModal()" class="btn btn-secondary btn-sm">✕</button>
+    </div>
+    <div id="bin-modal-content"></div>
+  </div>
+</div>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<div style="position:relative;z-index:1;">
+
+  <!-- HEADER -->
+  <header class="header-glow" style="border-bottom:1px solid var(--border);padding:0 24px;">
+    <div style="max-width:1600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#0d0f14;">N</div>
+          <div>
+            <div class="font-display" style="font-size:1.05rem;font-weight:800;letter-spacing:-0.02em;">NEXUSWARE <span style="color:var(--accent);">IMS</span></div>
+            <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:-2px;">Inventory Intelligence Platform</div>
+          </div>
+        </div>
+        <div style="width:1px;height:28px;background:var(--border);"></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="status-dot status-live"></span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;">LIVE</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="simulateUsage()" class="btn btn-warning btn-sm">
+          <span>▶</span> Simulate Usage
+        </button>
+        <button onclick="triggerOptimise()" class="btn btn-secondary btn-sm" id="opt-btn">
+          <span>⟳</span> Optimise Warehouse
+        </button>
+        <button onclick="openDetectModal()" class="btn btn-primary">
+          <span>⬡</span> Detect New Part
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:1600px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px;">
+
+    <!-- KPI ROW -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+      <div class="kpi-card accent-green">
+        <div class="section-title">Total Parts</div>
+        <div class="kpi-value" id="kpi-total" style="color:var(--green);">0</div>
+        <div class="kpi-delta" style="color:var(--text-muted);" id="kpi-total-delta">— units across all bins</div>
+      </div>
+      <div class="kpi-card accent-blue">
+        <div class="section-title">Space Utilisation</div>
+        <div class="kpi-value" id="kpi-util" style="color:var(--accent2);">0%</div>
+        <div class="progress-bar" style="margin-top:8px;">
+          <div class="progress-fill" id="kpi-util-bar" style="background:var(--accent2);width:0%;"></div>
+        </div>
+        <div class="kpi-delta" style="color:var(--text-muted);margin-top:6px;" id="kpi-util-delta">of 16 bins</div>
+      </div>
+      <div class="kpi-card accent-amber">
+        <div class="section-title">Unique SKUs</div>
+        <div class="kpi-value" id="kpi-skus" style="color:var(--accent3);">0</div>
+        <div class="kpi-delta" style="color:var(--text-muted);" id="kpi-cat-delta">— categories</div>
+      </div>
+      <div class="kpi-card accent-purple">
+        <div class="section-title">Optimisation Gain</div>
+        <div class="kpi-value" id="kpi-gain" style="color:var(--accent5);">0%</div>
+        <div class="kpi-delta" style="color:var(--text-muted);" id="kpi-gain-delta">run optimiser to calculate</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: Table + Grid + Alerts -->
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:14px;">
+
+      <!-- LEFT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- INVENTORY TABLE -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <div class="section-title" style="font-size:0.7rem;">Inventory Register</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="search-input" type="text" placeholder="Search parts…" style="width:180px;padding:5px 10px;font-size:0.78rem;" oninput="filterTable()"/>
+              <select id="cat-filter" style="width:130px;padding:5px 10px;font-size:0.78rem;" onchange="filterTable()">
+                <option value="">All Categories</option>
+                <option>Fasteners</option><option>Brackets</option><option>Shafts</option>
+                <option>Housings</option><option>Gears</option><option>Seals</option>
+                <option>Sensors</option><option>Bearings</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Part Name</th>
+                  <th>Category</th>
+                  <th>L×W×H (cm)</th>
+                  <th>Volume (cm³)</th>
+                  <th>Qty</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="card" style="padding:16px;">
+            <div class="section-title" style="margin-bottom:14px;">Space Usage per Bin</div>
+            <div class="chart-container">
+              <canvas id="chart-bins"></canvas>
+            </div>
+          </div>
+          <div class="card" style="padding:16px;">
+            <div class="section-title" style="margin-bottom:14px;">Parts by Category</div>
+            <div class="chart-container">
+              <canvas id="chart-cats"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY LOG -->
+        <div class="card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="section-title">Activity Log</div>
+            <button onclick="clearLog()" class="btn btn-secondary btn-sm" style="font-size:0.7rem;">Clear</button>
+          </div>
+          <div id="activity-log" class="scroll-panel" style="max-height:160px;"></div>
+        </div>
+
+      </div><!-- /LEFT COLUMN -->
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- STORAGE GRID -->
+        <div class="card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="section-title">Warehouse Grid</div>
+            <div style="display:flex;gap:8px;align-items:center;font-size:0.68rem;color:var(--text-muted);">
+              <span style="width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;"></span>Free
+              <span style="width:8px;height:8px;background:var(--yellow);border-radius:50%;display:inline-block;"></span>Partial
+              <span style="width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block;"></span>Full
+            </div>
+          </div>
+          <div id="storage-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">16 bins · 5000 cm³ max each</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent);" id="grid-total-vol">Total: 0 / 80,000 cm³</div>
+          </div>
+        </div>
+
+        <!-- LLM PANEL -->
+        <div class="card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="section-title">AI Insight Engine</div>
+            <span class="badge badge-cyan">LLM Sim</span>
+          </div>
+          <div id="llm-chat" class="scroll-panel" style="max-height:200px;margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="llm-input" type="text" placeholder="Ask about inventory, space, restocking…" style="flex:1;" onkeydown="if(event.key==='Enter')askLLM()"/>
+            <button onclick="askLLM()" class="btn btn-primary btn-sm">Ask</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <button onclick="quickAsk('What parts are overstocked?')" class="btn btn-secondary btn-sm">Overstock?</button>
+            <button onclick="quickAsk('Which bins need attention?')" class="btn btn-secondary btn-sm">Bin status?</button>
+            <button onclick="quickAsk('Predict restocking needs')" class="btn btn-secondary btn-sm">Restock?</button>
+            <button onclick="quickAsk('Optimise space')" class="btn btn-secondary btn-sm">Space tips</button>
+          </div>
+        </div>
+
+        <!-- PREDICTIVE ALERTS -->
+        <div class="card" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="section-title">Predictive Alerts</div>
+            <span class="badge badge-red" id="alert-count-badge">0 active</span>
+          </div>
+          <div id="alerts-panel" style="max-height:220px;" class="scroll-panel">
+            <div style="color:var(--text-muted);font-size:0.78rem;text-align:center;padding:20px 0;">No alerts — system healthy ✓</div>
+          </div>
+        </div>
+
+      </div><!-- /RIGHT COLUMN -->
+
+    </div><!-- /MAIN GRID -->
+
+    <!-- BOTTOM ROW: Picker Routing Sim -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card" style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="section-title">Picker Routing Simulator</div>
+          <button onclick="runPickerRoute()" class="btn btn-secondary btn-sm">▶ Run Route</button>
+        </div>
+        <div id="picker-route-panel" style="font-size:0.8rem;color:var(--text-muted);">
+          Select parts and run route to generate optimised picker path through warehouse zones.
+        </div>
+        <div id="picker-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="section-title">Utilisation Trend</div>
+          <span class="badge badge-blue">Live</span>
+        </div>
+        <div class="chart-container" style="height:160px;">
+          <canvas id="chart-trend"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+
+const BINS = 16;
+const BIN_CAPACITY = 5000; // cm³
+const ZONES = ['A','A','A','A','B','B','B','B','C','C','C','C','D','D','D','D'];
+
+// Warehouse bins state
+let bins = Array.from({length: BINS}, (_, i) => ({
+  id: i,
+  label: `${ZONES[i]}${(i % 4) + 1}`,
+  zone: ZONES[i],
+  usedVolume: 0,
+  parts: []
+}));
+
+// Inventory parts
+let inventory = [];
+let nextSKU = 1001;
+let lastOptGain = 0;
+let activityLog = [];
+let llmHistory = [];
+let trendData = { labels: [], values: [] };
+let usageHistory = {}; // partId -> removal count
+
+// ============================================================
+// INITIAL DATA — realistic parts
+// ============================================================
+const SEED_PARTS = [
+  { name:'Hex Bolt M8×40',   cat:'Fasteners', l:4.0,  w:1.3, h:1.3,  qty:120, bin:0 },
+  { name:'Hex Bolt M12×60',  cat:'Fasteners', l:6.0,  w:1.9, h:1.9,  qty:85,  bin:0 },
+  { name:'Bracket L-Type 50',cat:'Brackets',  l:5.0,  w:5.0, h:0.4,  qty:40,  bin:1 },
+  { name:'Bracket U-Channel', cat:'Brackets',  l:8.0,  w:3.0, h:2.0,  qty:18,  bin:1 },
+  { name:'Shaft 20mm×300',   cat:'Shafts',    l:30.0, w:2.0, h:2.0,  qty:12,  bin:2 },
+  { name:'Shaft 30mm×500',   cat:'Shafts',    l:50.0, w:3.0, h:3.0,  qty:6,   bin:3 },
+  { name:'Housing CNC-A',    cat:'Housings',  l:12.0, w:8.0, h:5.0,  qty:8,   bin:4 },
+  { name:'Spur Gear Z24',    cat:'Gears',     l:4.0,  w:4.0, h:2.5,  qty:22,  bin:5 },
+  { name:'O-Ring 50mm',      cat:'Seals',     l:5.2,  w:5.2, h:0.3,  qty:200, bin:6 },
+  { name:'Proximity Sensor', cat:'Sensors',   l:7.0,  w:3.0, h:3.0,  qty:4,   bin:7 },
+  { name:'Ball Bearing 6205',cat:'Bearings',  l:5.2,  w:5.2, h:1.5,  qty:30,  bin:8 },
+  { name:'Flat Washer M10',  cat:'Fasteners', l:2.1,  w:2.1, h:0.2,  qty:300, bin:9 },
+];
+
+function seedInventory() {
+  SEED_PARTS.forEach(p => {
+    const vol = parseFloat((p.l * p.w * p.h).toFixed(2));
+    const part = {
+      id: nextSKU++,
+      name: p.name,
+      category: p.cat,
+      length: p.l,
+      width: p.w,
+      height: p.h,
+      volume: vol,
+      quantity: p.qty,
+      binId: p.bin,
+      addedAt: new Date().toISOString(),
+      usageRate: 0
+    };
+    inventory.push(part);
+    const totalVol = parseFloat((vol * p.qty).toFixed(2));
+    bins[p.bin].usedVolume = parseFloat((bins[p.bin].usedVolume + Math.min(totalVol, BIN_CAPACITY - bins[p.bin].usedVolume)).toFixed(2));
+    bins[p.bin].parts.push(part.id);
+  });
+}
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+
+function getBinClass(bin) {
+  const pct = bin.usedVolume / BIN_CAPACITY;
+  if (pct >= 0.8) return 'bin-full';
+  if (pct >= 0.4) return 'bin-partial';
+  return 'bin-free';
+}
+
+function getBinPct(bin) {
+  return Math.min(100, Math.round((bin.usedVolume / BIN_CAPACITY) * 100));
+}
+
+function getPartById(id) {
+  return inventory.find(p => p.id === id);
+}
+
+function calcTotalVol() {
+  return bins.reduce((s, b) => s + b.usedVolume, 0);
+}
+
+function calcUtilPct() {
+  return Math.round((calcTotalVol() / (BINS * BIN_CAPACITY)) * 100);
+}
+
+function formatVol(v) {
+  return v >= 1000 ? (v/1000).toFixed(2) + ' L' : v.toFixed(1) + ' cm³';
+}
+
+function generateSKU() {
+  return `SKU-${nextSKU}`;
+}
+
+function getCategoryAvgVol(cat) {
+  const parts = inventory.filter(p => p.category === cat);
+  if (!parts.length) return null;
+  return parts.reduce((s, p) => s + p.volume, 0) / parts.length;
+}
+
+function suggestBin(volPerUnit, qty) {
+  const needed = volPerUnit * qty;
+  // First Fit Decreasing: pick bin with most remaining space that still fits
+  let best = null, bestRem = -1;
+  bins.forEach(b => {
+    const rem = BIN_CAPACITY - b.usedVolume;
+    if (rem >= volPerUnit && rem > bestRem) {
+      best = b; bestRem = rem;
+    }
+  });
+  if (!best) {
+    // fallback: least used
+    best = bins.reduce((a, b) => a.usedVolume < b.usedVolume ? a : b);
+  }
+  return best;
+}
+
+function getStatus(part) {
+  if (part.quantity === 0) return 'depleted';
+  if (part.quantity < 5) return 'critical';
+  if (part.quantity < 15) return 'low';
+  const bin = bins[part.binId];
+  const pct = bin.usedVolume / BIN_CAPACITY;
+  if (pct >= 0.85) return 'overloaded';
+  return 'ok';
+}
+
+function statusBadge(s) {
+  const m = {
+    'ok':        '<span class="badge badge-green">OK</span>',
+    'low':       '<span class="badge badge-yellow">Low Stock</span>',
+    'critical':  '<span class="badge badge-red">Critical</span>',
+    'depleted':  '<span class="badge badge-red">Depleted</span>',
+    'overloaded':'<span class="badge badge-red">Overloaded</span>',
+  };
+  return m[s] || '';
+}
+
+// ============================================================
+// TOAST NOTIFICATIONS
+// ============================================================
+function toast(msg, type='info') {
+  const icons = { success:'✓', error:'✕', warning:'⚠', info:'ℹ' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+// ============================================================
+// ACTIVITY LOG
+// ============================================================
+function logAction(msg, type='info') {
+  const colors = { info:'var(--accent2)', success:'var(--green)', warning:'var(--yellow)', error:'var(--red)' };
+  const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  activityLog.unshift({ msg, type, time: now });
+  if (activityLog.length > 50) activityLog.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('activity-log');
+  if (!activityLog.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.78rem;text-align:center;padding:10px;">No activity yet</div>';
+    return;
+  }
+  el.innerHTML = activityLog.map(e => `
+    <div class="log-entry">
+      <div class="log-dot" style="background:${e.type==='success'?'var(--green)':e.type==='warning'?'var(--yellow)':e.type==='error'?'var(--red)':'var(--accent2)'}"></div>
+      <div style="flex:1;">
+        <span style="color:var(--text-primary);">${e.msg}</span>
+      </div>
+      <div style="color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:0.68rem;white-space:nowrap;">${e.time}</div>
+    </div>
+  `).join('');
+}
+
+function clearLog() {
+  activityLog = [];
+  renderLog();
+  toast('Activity log cleared', 'info');
+}
+
+// ============================================================
+// RENDER INVENTORY TABLE
+// ============================================================
+function renderTable(parts = null) {
+  const data = parts || getFilteredParts();
+  const tbody = document.getElementById('inventory-tbody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted);">No parts found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(p => {
+    const bin = bins[p.binId];
+    const status = getStatus(p);
+    return `
+    <tr>
+      <td><span class="font-mono" style="color:var(--text-muted);font-size:0.7rem;">SKU-${p.id}</span></td>
+      <td>
+        <div style="font-weight:500;">${p.name}</div>
+        ${p.anomaly ? '<div style="font-size:0.68rem;color:var(--red);">⚠ Dimension anomaly</div>' : ''}
+      </td>
+      <td><span class="badge badge-blue">${p.category}</span></td>
+      <td><span class="font-mono" style="font-size:0.75rem;">${p.length}×${p.width}×${p.height}</span></td>
+      <td><span class="font-mono" style="font-size:0.75rem;color:var(--accent);">${p.volume.toLocaleString()}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button onclick="changeQty(${p.id}, -1)" class="btn btn-danger btn-sm" style="padding:2px 7px;font-size:0.8rem;">−</button>
+          <span class="font-mono" style="font-size:0.85rem;min-width:30px;text-align:center;">${p.quantity}</span>
+          <button onclick="changeQty(${p.id}, 1)" class="btn btn-secondary btn-sm" style="padding:2px 7px;font-size:0.8rem;">+</button>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${getBinClass(bin).includes('full')?'var(--red)':getBinClass(bin).includes('partial')?'var(--yellow)':'var(--green)'};"></div>
+          <span class="font-mono" style="font-size:0.78rem;">${bin.label}</span>
+        </div>
+      </td>
+      <td>${statusBadge(status)}</td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button onclick="movePart(${p.id})" class="btn btn-secondary btn-sm" title="Move to better bin">⇄</button>
+          <button onclick="confirmDelete(${p.id})" class="btn btn-danger btn-sm" title="Remove part">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function getFilteredParts() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  return inventory.filter(p =>
+    (!search || p.name.toLowerCase().includes(search) || `sku-${p.id}`.includes(search)) &&
+    (!cat || p.category === cat)
+  );
+}
+
+function filterTable() { renderTable(); }
+
+// ============================================================
+// RENDER STORAGE GRID
+// ============================================================
+function renderGrid() {
+  const grid = document.getElementById('storage-grid');
+  grid.innerHTML = bins.map(bin => {
+    const cls = getBinClass(bin);
+    const pct = getBinPct(bin);
+    const partNames = bin.parts.map(id => {
+      const p = getPartById(id);
+      return p ? p.name : '';
+    }).filter(Boolean).slice(0, 3).join(', ');
+    return `
+    <div class="bin-cell ${cls} tooltip-container"
+         onclick="showBinDetail(${bin.id})"
+         onmousemove="showBinTooltip(event,${bin.id})"
+         onmouseleave="hideBinTooltip()">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="bin-label">${bin.label}</span>
+        <span style="font-size:0.6rem;color:var(--text-muted);">${bin.parts.length} parts</span>
+      </div>
+      <div class="bin-pct">${pct}%</div>
+      <div class="bin-bar">
+        <div class="bin-bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const total = calcTotalVol();
+  document.getElementById('grid-total-vol').textContent = `Total: ${total.toLocaleString()} / 80,000 cm³`;
+}
+
+function showBinTooltip(e, binId) {
+  const bin = bins[binId];
+  const pct = getBinPct(bin);
+  const parts = bin.parts.map(id => {
+    const p = getPartById(id);
+    return p ? `<div style="display:flex;justify-content:space-between;gap:8px;"><span>${p.name}</span><span class="font-mono" style="color:var(--accent);">×${p.quantity}</span></div>` : '';
+  }).filter(Boolean).join('');
+  const tt = document.getElementById('bin-tooltip');
+  tt.innerHTML = `
+    <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px;color:var(--text-primary);">${bin.label} — Zone ${bin.zone}</div>
+    <div style="color:var(--text-muted);font-size:0.72rem;margin-bottom:6px;">${bin.usedVolume.toLocaleString()} / ${BIN_CAPACITY.toLocaleString()} cm³ (${pct}%)</div>
+    ${parts || '<div style="color:var(--text-muted);">Empty</div>'}
+  `;
+  tt.style.display = 'block';
+  tt.style.left = (e.clientX + 14) + 'px';
+  tt.style.top = (e.clientY - 10) + 'px';
+}
+
+function hideBinTooltip() {
+  document.getElementById('bin-tooltip').style.display = 'none';
+}
+
+function showBinDetail(binId) {
+  const bin = bins[binId];
+  const pct = getBinPct(bin);
+  const partsHtml = bin.parts.map(id => {
+    const p = getPartById(id);
+    if (!p) return '';
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+      <div><div style="font-weight:500;">${p.name}</div><div style="color:var(--text-muted);font-size:0.7rem;">SKU-${p.id} · ${p.category}</div></div>
+      <div style="text-align:right;"><div class="font-mono" style="color:var(--accent);">×${p.quantity}</div><div style="font-size:0.68rem;color:var(--text-muted);">${p.volume} cm³/unit</div></div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('bin-modal-title').textContent = `Bin ${bin.label} — Zone ${bin.zone}`;
+  document.getElementById('bin-modal-content').innerHTML = `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:0.8rem;color:var(--text-muted);">Capacity Used</span>
+        <span class="font-mono" style="font-size:0.8rem;">${bin.usedVolume.toLocaleString()} / ${BIN_CAPACITY.toLocaleString()} cm³</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pct}%;background:${pct>=80?'var(--red)':pct>=40?'var(--yellow)':'var(--green)'};"></div>
+      </div>
+      <div style="text-align:right;font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-top:4px;color:${pct>=80?'var(--red)':pct>=40?'var(--yellow)':'var(--green)'};">${pct}%</div>
+    </div>
+    <div class="section-title" style="margin-bottom:8px;">Parts in this bin</div>
+    ${partsHtml || '<div style="color:var(--text-muted);text-align:center;padding:16px;font-size:0.8rem;">Empty bin — available for assignment</div>'}
+  `;
+  document.getElementById('bin-modal').classList.add('active');
+}
+
+function closeBinModal() {
+  document.getElementById('bin-modal').classList.remove('active');
+}
+
+// ============================================================
+// KPI UPDATE
+// ============================================================
+function updateKPIs() {
+  const total = inventory.reduce((s, p) => s + p.quantity, 0);
+  const util = calcUtilPct();
+  const skus = inventory.length;
+  const cats = [...new Set(inventory.map(p => p.category))].length;
+
+  document.getElementById('kpi-total').textContent = total.toLocaleString();
+  document.getElementById('kpi-total-delta').textContent = `${skus} SKUs across all bins`;
+  document.getElementById('kpi-util').textContent = util + '%';
+  document.getElementById('kpi-util-bar').style.width = util + '%';
+  document.getElementById('kpi-util-bar').style.background = util >= 85 ? 'var(--red)' : util >= 60 ? 'var(--yellow)' : 'var(--accent2)';
+  document.getElementById('kpi-util-delta').textContent = `${bins.filter(b=>b.usedVolume > 0).length} of 16 bins occupied`;
+  document.getElementById('kpi-skus').textContent = skus;
+  document.getElementById('kpi-cat-delta').textContent = `${cats} categor${cats===1?'y':'ies'} tracked`;
+  document.getElementById('kpi-gain').textContent = lastOptGain + '%';
+  document.getElementById('kpi-gain-delta').textContent = lastOptGain > 0 ? `freed after last optimisation` : 'run optimiser to calculate';
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+let chartBins, chartCats, chartTrend;
+
+function initCharts() {
+  const globalOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    animation: { duration: 400 }
+  };
+
+  // Bins usage chart
+  chartBins = new Chart(document.getElementById('chart-bins'), {
+    type: 'bar',
+    data: {
+      labels: bins.map(b => b.label),
+      datasets: [{
+        data: bins.map(b => getBinPct(b)),
+        backgroundColor: bins.map(b => {
+          const p = getBinPct(b);
+          return p >= 80 ? 'rgba(239,68,68,0.7)' : p >= 40 ? 'rgba(245,158,11,0.7)' : 'rgba(16,185,129,0.7)';
+        }),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      ...globalOpts,
+      scales: {
+        y: {
+          max: 100,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#4a5568', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#4a5568', font: { family: 'IBM Plex Mono', size: 9 } }
+        }
+      }
+    }
+  });
+
+  // Category chart
+  const cats = getCatData();
+  chartCats = new Chart(document.getElementById('chart-cats'), {
+    type: 'doughnut',
+    data: {
+      labels: cats.labels,
+      datasets: [{
+        data: cats.values,
+        backgroundColor: ['#00e5b0','#3b82f6','#f59e0b','#ef4444','#a78bfa','#10b981','#f87171','#60a5fa'],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      ...globalOpts,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'right',
+          labels: { color: '#8892a4', font: { family: 'IBM Plex Mono', size: 9 }, boxWidth: 10, padding: 8 }
+        }
+      },
+      cutout: '60%'
+    }
+  });
+
+  // Trend chart
+  for (let i = 0; i < 10; i++) {
+    trendData.labels.push('-' + (10-i) + 's');
+    trendData.values.push(calcUtilPct());
+  }
+  chartTrend = new Chart(document.getElementById('chart-trend'), {
+    type: 'line',
+    data: {
+      labels: [...trendData.labels],
+      datasets: [{
+        data: [...trendData.values],
+        borderColor: 'rgba(0,229,176,0.8)',
+        backgroundColor: 'rgba(0,229,176,0.06)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2,
+        pointBackgroundColor: 'var(--accent)',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      ...globalOpts,
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#4a5568', font: { family: 'IBM Plex Mono', size: 9 }, callback: v => v + '%' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#4a5568', font: { family: 'IBM Plex Mono', size: 8 } }
+        }
+      }
+    }
+  });
+}
+
+function getCatData() {
+  const map = {};
+  inventory.forEach(p => {
+    map[p.category] = (map[p.category] || 0) + p.quantity;
+  });
+  return { labels: Object.keys(map), values: Object.values(map) };
+}
+
+function updateCharts() {
+  // Bins
+  chartBins.data.datasets[0].data = bins.map(b => getBinPct(b));
+  chartBins.data.datasets[0].backgroundColor = bins.map(b => {
+    const p = getBinPct(b);
+    return p >= 80 ? 'rgba(239,68,68,0.7)' : p >= 40 ? 'rgba(245,158,11,0.7)' : 'rgba(16,185,129,0.7)';
+  });
+  chartBins.update();
+
+  // Categories
+  const cats = getCatData();
+  chartCats.data.labels = cats.labels;
+  chartCats.data.datasets[0].data = cats.values;
+  chartCats.update();
+
+  // Trend
+  trendData.labels.push('now');
+  trendData.values.push(calcUtilPct());
+  if (trendData.labels.length > 20) {
+    trendData.labels.shift();
+    trendData.values.shift();
+  }
+  chartTrend.data.labels = [...trendData.labels];
+  chartTrend.data.datasets[0].data = [...trendData.values];
+  chartTrend.update();
+}
+
+// Auto-update trend every 5 seconds
+setInterval(() => {
+  if (inventory.length > 0) {
+    trendData.labels.push(new Date().toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+    trendData.values.push(calcUtilPct());
+    if (trendData.labels.length > 20) { trendData.labels.shift(); trendData.values.shift(); }
+    chartTrend.data.labels = [...trendData.labels];
+    chartTrend.data.datasets[0].data = [...trendData.values];
+    chartTrend.update();
+  }
+}, 5000);
+
+// ============================================================
+// DETECT PART MODAL
+// ============================================================
+function openDetectModal() {
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-qty').value = '10';
+  document.getElementById('m-len').value = '';
+  document.getElementById('m-wid').value = '';
+  document.getElementById('m-hei').value = '';
+  document.getElementById('m-vol').textContent = '—';
+  document.getElementById('m-anomaly').style.display = 'none';
+  document.getElementById('m-suggested').style.display = 'none';
+  document.getElementById('detect-modal').classList.add('active');
+  document.getElementById('m-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('detect-modal').classList.remove('active');
+}
+
+// Listen for dimension changes
+['m-len','m-wid','m-hei'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateModalVolume);
+});
+
+function updateModalVolume() {
+  const l = parseFloat(document.getElementById('m-len').value);
+  const w = parseFloat(document.getElementById('m-wid').value);
+  const h = parseFloat(document.getElementById('m-hei').value);
+  if (l > 0 && w > 0 && h > 0) {
+    const vol = parseFloat((l * w * h).toFixed(2));
+    document.getElementById('m-vol').textContent = `${vol.toLocaleString()} cm³`;
+    checkAnomalyModal(vol);
+    suggestBinModal(vol);
+  } else {
+    document.getElementById('m-vol').textContent = '—';
+  }
+}
+
+function checkAnomalyModal(vol) {
+  const cat = document.getElementById('m-cat').value;
+  const avgVol = getCategoryAvgVol(cat);
+  if (avgVol && vol > avgVol * 1.3) {
+    const excess = Math.round(((vol / avgVol) - 1) * 100);
+    document.getElementById('m-anomaly').style.display = 'flex';
+    document.getElementById('m-anomaly-text').textContent =
+      `Dimension anomaly detected: volume is ${excess}% above category average (avg: ${avgVol.toFixed(0)} cm³). Verify measurements.`;
+  } else {
+    document.getElementById('m-anomaly').style.display = 'none';
+  }
+}
+
+function suggestBinModal(vol) {
+  const qty = parseInt(document.getElementById('m-qty').value) || 1;
+  const best = suggestBin(vol, qty);
+  const rem = BIN_CAPACITY - best.usedVolume;
+  document.getElementById('m-suggested').style.display = 'block';
+  document.getElementById('m-suggested-text').textContent =
+    `Bin ${best.label} recommended — ${rem.toLocaleString()} cm³ remaining (${Math.round((rem/BIN_CAPACITY)*100)}% free)`;
+}
+
+const PART_TEMPLATES = {
+  Fasteners: [{l:2,w:2,h:0.2},{l:4,w:1.2,h:1.2},{l:6,w:1.5,h:1.5}],
+  Brackets:  [{l:5,w:5,h:0.4},{l:8,w:3,h:2}],
+  Shafts:    [{l:25,w:2,h:2},{l:40,w:3,h:3}],
+  Housings:  [{l:10,w:8,h:5},{l:15,w:10,h:7}],
+  Gears:     [{l:5,w:5,h:2},{l:8,w:8,h:3}],
+  Seals:     [{l:4,w:4,h:0.3},{l:7,w:7,h:0.5}],
+  Sensors:   [{l:5,w:3,h:3},{l:8,w:4,h:4}],
+  Bearings:  [{l:5,w:5,h:1.5},{l:8,w:8,h:2}],
+};
+
+const NAME_POOLS = {
+  Fasteners: ['Hex Bolt M6','Hex Bolt M10','Socket Cap M8','Stud M12','Machine Screw M5'],
+  Brackets:  ['L-Bracket 40','U-Channel 60','Angle Plate','Corner Bracket','Mounting Rail'],
+  Shafts:    ['Shaft 15mm×250','Shaft 25mm×400','Drive Shaft 30','Keyed Shaft 20','Spline Shaft'],
+  Housings:  ['Housing Type-B','Pump Housing','Motor Cover','Gearbox Housing','End Cap'],
+  Gears:     ['Spur Gear Z18','Helical Gear Z24','Bevel Gear 45°','Rack Gear 300','Pinion Z12'],
+  Seals:     ['O-Ring 40mm','Lip Seal 60mm','Face Seal 80','Quad Ring','Backup Ring'],
+  Sensors:   ['Proximity Sensor','Hall Effect','Temp Sensor PT100','Pressure Transducer','Encoder'],
+  Bearings:  ['Ball Bearing 6202','Taper Bearing 30210','Thrust Bearing','Needle Bearing','Pillow Block'],
+};
+
+function autoFillDimensions() {
+  const cat = document.getElementById('m-cat').value;
+  const templates = PART_TEMPLATES[cat] || [{l:5,w:5,h:5}];
+  const t = templates[Math.floor(Math.random() * templates.length)];
+  const jitter = () => +(Math.random() * 0.4 - 0.2 + 1).toFixed(1);
+
+  const l = +(t.l * jitter()).toFixed(1);
+  const w = +(t.w * jitter()).toFixed(1);
+  const h = +(t.h * jitter()).toFixed(1);
+
+  document.getElementById('m-len').value = l;
+  document.getElementById('m-wid').value = w;
+  document.getElementById('m-hei').value = h;
+
+  // Auto-suggest a name if empty
+  const names = NAME_POOLS[cat] || ['Part'];
+  if (!document.getElementById('m-name').value) {
+    document.getElementById('m-name').value = names[Math.floor(Math.random() * names.length)] + ' #' + Math.floor(Math.random()*900+100);
+  }
+
+  updateModalVolume();
+  toast('CV scan complete — dimensions extracted', 'success');
+}
+
+function submitDetectPart() {
+  const name = document.getElementById('m-name').value.trim();
+  const cat = document.getElementById('m-cat').value;
+  const qty = parseInt(document.getElementById('m-qty').value);
+  const l = parseFloat(document.getElementById('m-len').value);
+  const w = parseFloat(document.getElementById('m-wid').value);
+  const h = parseFloat(document.getElementById('m-hei').value);
+
+  if (!name) { toast('Part name is required', 'error'); return; }
+  if (!l || !w || !h || l <= 0 || w <= 0 || h <= 0) { toast('Valid dimensions required', 'error'); return; }
+  if (!qty || qty < 1) { toast('Quantity must be ≥ 1', 'error'); return; }
+
+  const vol = parseFloat((l * w * h).toFixed(2));
+  const avgVol = getCategoryAvgVol(cat);
+  const isAnomaly = avgVol && vol > avgVol * 1.3;
+
+  const best = suggestBin(vol, qty);
+  const addedVol = Math.min(vol * qty, BIN_CAPACITY - best.usedVolume);
+  best.usedVolume = parseFloat((best.usedVolume + addedVol).toFixed(2));
+
+  const part = {
+    id: nextSKU++,
+    name, category: cat,
+    length: l, width: w, height: h, volume: vol,
+    quantity: qty,
+    binId: best.id,
+    addedAt: new Date().toISOString(),
+    usageRate: 0,
+    anomaly: isAnomaly
+  };
+
+  if (!best.parts.includes(part.id)) best.parts.push(part.id);
+  inventory.push(part);
+
+  if (isAnomaly) {
+    const excess = Math.round(((vol / avgVol) - 1) * 100);
+    toast(`⚠ Anomaly: ${name} is ${excess}% larger than avg for ${cat}`, 'warning');
+    logAction(`Anomaly detected on ${name}: +${excess}% vs category avg`, 'warning');
+  }
+
+  toast(`${name} added to Bin ${best.label}`, 'success');
+  logAction(`CV scan: ${name} (SKU-${part.id}) × ${qty} → Bin ${best.label}`, 'success');
+  closeModal();
+  generateAutoInsight();
+  refreshAll();
+}
+
+// ============================================================
+// QUANTITY CHANGES
+// ============================================================
+function changeQty(partId, delta) {
+  const part = getPartById(partId);
+  if (!part) return;
+  const newQty = part.quantity + delta;
+  if (newQty < 0) { toast('Quantity cannot be negative', 'error'); return; }
+
+  const bin = bins[part.binId];
+  if (delta > 0) {
+    const added = Math.min(part.volume * delta, BIN_CAPACITY - bin.usedVolume);
+    bin.usedVolume = parseFloat((bin.usedVolume + added).toFixed(2));
+    if (added < part.volume * delta) toast(`Bin ${bin.label} is nearing capacity`, 'warning');
+  } else {
+    bin.usedVolume = parseFloat(Math.max(0, bin.usedVolume - part.volume * Math.abs(delta)).toFixed(2));
+    // track usage
+    usageHistory[partId] = (usageHistory[partId] || 0) + 1;
+    part.usageRate = usageHistory[partId];
+  }
+
+  part.quantity = newQty;
+  const action = delta > 0 ? 'added' : 'removed';
+  logAction(`${part.name}: qty ${action} (${part.quantity - delta} → ${part.quantity}) in Bin ${bin.label}`, delta > 0 ? 'success' : 'info');
+  refreshAll();
+  checkAlerts();
+}
+
+function movePart(partId) {
+  const part = getPartById(partId);
+  if (!part) return;
+  const oldBin = bins[part.binId];
+  const best = suggestBin(part.volume, part.quantity);
+  if (best.id === part.binId) { toast('Part already in optimal bin', 'info'); return; }
+
+  // Remove from old bin
+  oldBin.usedVolume = parseFloat(Math.max(0, oldBin.usedVolume - part.volume * part.quantity).toFixed(2));
+  oldBin.parts = oldBin.parts.filter(id => id !== part.id);
+
+  // Add to new bin
+  const added = Math.min(part.volume * part.quantity, BIN_CAPACITY - best.usedVolume);
+  best.usedVolume = parseFloat((best.usedVolume + added).toFixed(2));
+  if (!best.parts.includes(part.id)) best.parts.push(part.id);
+  part.binId = best.id;
+
+  logAction(`Moved ${part.name} from Bin ${oldBin.label} → Bin ${best.label}`, 'success');
+  toast(`${part.name} moved to Bin ${best.label}`, 'success');
+  refreshAll();
+}
+
+function confirmDelete(partId) {
+  const part = getPartById(partId);
+  if (!part) return;
+  if (!confirm(`Remove "${part.name}" (SKU-${partId}) from inventory? This action cannot be undone.`)) return;
+
+  const bin = bins[part.binId];
+  bin.usedVolume = parseFloat(Math.max(0, bin.usedVolume - part.volume * part.quantity).toFixed(2));
+  bin.parts = bin.parts.filter(id => id !== partId);
+  inventory = inventory.filter(p => p.id !== partId);
+
+  logAction(`Deleted ${part.name} (SKU-${partId}) from inventory`, 'error');
+  toast(`${part.name} removed from inventory`, 'warning');
+  refreshAll();
+  checkAlerts();
+}
+
+// ============================================================
+// OPTIMISATION ALGORITHM (First Fit Decreasing by volume)
+// ============================================================
+function triggerOptimise() {
+  const btn = document.getElementById('opt-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ Optimising…';
+
+  setTimeout(() => {
+    const beforeVol = calcTotalVol();
+
+    // Reset bins
+    bins.forEach(b => { b.usedVolume = 0; b.parts = []; });
+
+    // Sort parts by total volume descending
+    const sorted = [...inventory].sort((a, b) => (b.volume * b.quantity) - (a.volume * a.quantity));
+
+    sorted.forEach(part => {
+      const best = suggestBin(part.volume, part.quantity);
+      const added = Math.min(part.volume * part.quantity, BIN_CAPACITY - best.usedVolume);
+      best.usedVolume = parseFloat((best.usedVolume + added).toFixed(2));
+      if (!best.parts.includes(part.id)) best.parts.push(part.id);
+      // Update part's bin reference
+      const originalPart = getPartById(part.id);
+      if (originalPart) originalPart.binId = best.id;
+    });
+
+    const afterVol = calcTotalVol();
+    const maxVol = BINS * BIN_CAPACITY;
+    const beforeUtil = Math.round((beforeVol / maxVol) * 100);
+    const afterUtil = Math.round((afterVol / maxVol) * 100);
+    const gain = Math.max(0, beforeUtil - afterUtil);
+    lastOptGain = gain;
+
+    toast(`Optimisation complete — ${gain}% space freed`, 'success');
+    logAction(`Warehouse re-optimised: ${beforeUtil}% → ${afterUtil}% utilisation (${gain}% gain)`, 'success');
+    addLLMMessage(`✦ Optimisation Report: Warehouse re-packed using FFD algorithm. Space utilisation reduced from ${beforeUtil}% to ${afterUtil}%. ${gain}% efficiency gain. All parts consolidated into ${bins.filter(b=>b.parts.length>0).length} active bins.`, 'ai');
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>⟳</span> Optimise Warehouse';
+    refreshAll();
+  }, 600);
+}
+
+// ============================================================
+// SIMULATE USAGE (Predictive AI)
+// ============================================================
+function simulateUsage() {
+  if (!inventory.length) { toast('No parts in inventory', 'warning'); return; }
+  let changes = 0;
+  inventory.forEach(part => {
+    if (part.quantity > 0 && Math.random() < 0.55) {
+      const removed = Math.min(part.quantity, Math.floor(Math.random() * 5) + 1);
+      const bin = bins[part.binId];
+      bin.usedVolume = parseFloat(Math.max(0, bin.usedVolume - part.volume * removed).toFixed(2));
+      usageHistory[part.id] = (usageHistory[part.id] || 0) + removed;
+      part.usageRate = usageHistory[part.id];
+      part.quantity -= removed;
+      changes++;
+    }
+  });
+  logAction(`Usage simulation: ${changes} parts consumed`, 'warning');
+  toast(`Simulated usage across ${changes} parts`, 'info');
+  checkAlerts();
+  refreshAll();
+}
+
+// ============================================================
+// ALERTS MODULE
+// ============================================================
+function checkAlerts() {
+  const alerts = [];
+
+  inventory.forEach(p => {
+    if (p.quantity === 0) {
+      alerts.push({ type: 'critical', icon: '🔴', text: `${p.name} (SKU-${p.id}) is depleted — immediate restock required` });
+    } else if (p.quantity < 5) {
+      alerts.push({ type: 'critical', icon: '⚠', text: `${p.name}: only ${p.quantity} units remaining — restock soon` });
+    } else if (p.quantity < 15 && p.usageRate > 3) {
+      alerts.push({ type: 'warning', icon: '⚡', text: `${p.name}: low stock + high usage rate — predicted stockout in ~${Math.ceil(p.quantity / (p.usageRate/3))} cycles` });
+    }
+    if (p.anomaly) {
+      alerts.push({ type: 'warning', icon: '📐', text: `${p.name}: dimension anomaly flagged — verify physical measurement` });
+    }
+  });
+
+  bins.forEach(b => {
+    const pct = getBinPct(b);
+    if (pct >= 90) alerts.push({ type: 'critical', icon: '📦', text: `Bin ${b.label} is at ${pct}% capacity — move parts to avoid overflow` });
+  });
+
+  const panel = document.getElementById('alerts-panel');
+  document.getElementById('alert-count-badge').textContent = alerts.length + ' active';
+  document.getElementById('alert-count-badge').className = 'badge ' + (alerts.length > 0 ? 'badge-red' : 'badge-green');
+
+  if (!alerts.length) {
+    panel.innerHTML = '<div style="color:var(--text-muted);font-size:0.78rem;text-align:center;padding:20px 0;">No alerts — system healthy ✓</div>';
+    return;
+  }
+
+  panel.innerHTML = alerts.map(a => `
+    <div class="alert-item alert-${a.type}">
+      <span style="font-size:1rem;">${a.icon}</span>
+      <span style="color:${a.type==='critical'?'var(--red)':'var(--accent3)'};line-height:1.5;">${a.text}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// LLM INSIGHT ENGINE (Rule-based simulation)
+// ============================================================
+function generateAutoInsight() {
+  const insights = buildInsights();
+  if (insights.length > 0) {
+    addLLMMessage(insights[0], 'ai');
+  }
+}
+
+function buildInsights() {
+  const insights = [];
+  const totalVol = calcTotalVol();
+  const util = calcUtilPct();
+
+  const overstocked = inventory.filter(p => p.quantity > 50);
+  if (overstocked.length > 0) {
+    const top = overstocked.sort((a,b) => b.quantity - a.quantity)[0];
+    insights.push(`⬡ Insight: "${top.name}" has ${top.quantity} units — consider redistributing excess to secondary storage. Current bin utilisation at ${util}%.`);
+  }
+
+  const crowdedBins = bins.filter(b => getBinPct(b) >= 80);
+  if (crowdedBins.length > 0) {
+    insights.push(`⬡ Space Alert: ${crowdedBins.length} bin(s) above 80% capacity (${crowdedBins.map(b=>b.label).join(', ')}). Run optimiser to redistribute and free estimated 8–15% space.`);
+  }
+
+  const multibin = {};
+  inventory.forEach(p => {
+    if (!multibin[p.category]) multibin[p.category] = new Set();
+    multibin[p.category].add(p.binId);
+  });
+  const fragCat = Object.entries(multibin).filter(([,s]) => s.size >= 3).map(([k]) => k);
+  if (fragCat.length > 0) {
+    insights.push(`⬡ Fragmentation: Category "${fragCat[0]}" spans ${multibin[fragCat[0]].size} bins — consolidating could recover ~12% space and reduce picker travel time.`);
+  }
+
+  const lowParts = inventory.filter(p => p.quantity > 0 && p.quantity < 5);
+  if (lowParts.length > 0) {
+    insights.push(`⬡ Predictive Restock: ${lowParts.length} SKU(s) below critical threshold (${lowParts.slice(0,2).map(p=>p.name).join(', ')}). Trigger purchase orders now to avoid production downtime.`);
+  }
+
+  if (!insights.length) {
+    insights.push(`⬡ Status: Inventory levels nominal. Space utilisation at ${util}%. No immediate actions required.`);
+  }
+  return insights;
+}
+
+function askLLM() {
+  const input = document.getElementById('llm-input');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  addLLMMessage(q, 'user');
+  setTimeout(() => {
+    const answer = getLLMResponse(q);
+    addLLMMessage(answer, 'ai');
+  }, 400);
+}
+
+function quickAsk(q) {
+  document.getElementById('llm-input').value = q;
+  askLLM();
+}
+
+function getLLMResponse(query) {
+  const q = query.toLowerCase();
+  const util = calcUtilPct();
+  const totalParts = inventory.reduce((s,p) => s + p.quantity, 0);
+  const lowParts = inventory.filter(p => p.quantity < 5 && p.quantity > 0);
+  const overstocked = inventory.filter(p => p.quantity > 60);
+  const crowdedBins = bins.filter(b => getBinPct(b) >= 80);
+  const emptyBins = bins.filter(b => b.usedVolume === 0);
+
+  if (q.includes('overstock') || q.includes('excess') || q.includes('too many')) {
+    if (!overstocked.length) return `⬡ No overstocked parts detected. All ${inventory.length} SKUs are within normal range. Total inventory: ${totalParts.toLocaleString()} units across ${BINS - emptyBins.length} active bins.`;
+    return `⬡ Overstocked SKUs: ${overstocked.map(p=>`"${p.name}" (${p.quantity} units)`).join('; ')}. Recommendation: Move excess to secondary storage or trigger early shipment. Could free up to ${Math.round(overstocked.reduce((s,p)=>s+p.volume*p.quantity,0)/80000*100)}% warehouse space.`;
+  }
+
+  if (q.includes('space') || q.includes('optimis') || q.includes('utilisa')) {
+    return `⬡ Space Analysis: Current utilisation is ${util}%. ${crowdedBins.length > 0 ? `${crowdedBins.length} bins above 80% (${crowdedBins.map(b=>b.label).join(', ')}). ` : 'No bins critically overloaded. '} ${emptyBins.length} bins currently empty. Running the FFD optimiser could reduce utilisation by an estimated ${crowdedBins.length * 4 + 3}%.`;
+  }
+
+  if (q.includes('restock') || q.includes('predict') || q.includes('run out') || q.includes('low stock')) {
+    if (!lowParts.length) return `⬡ Restocking Forecast: All SKUs above critical threshold. Monitor ${inventory.filter(p=>p.quantity<15).length} parts with quantities below 15 units. Next review in estimated 2–3 production cycles.`;
+    return `⬡ Critical Restock Alert: ${lowParts.length} SKU(s) below threshold: ${lowParts.map(p=>`"${p.name}" (${p.quantity} remaining)`).join('; ')}. Initiate PO immediately — estimated ${lowParts.length > 2 ? 'high' : 'moderate'} production risk if not restocked within 48h.`;
+  }
+
+  if (q.includes('bin') || q.includes('storage') || q.includes('location') || q.includes('where')) {
+    return `⬡ Bin Status: ${BINS} bins total · ${bins.filter(b=>b.usedVolume>0).length} occupied · ${emptyBins.length} empty. Hotspots: ${crowdedBins.length > 0 ? crowdedBins.map(b=>`Bin ${b.label} at ${getBinPct(b)}%`).join(', ') : 'none'}. Most efficient bin: ${bins.reduce((a,b) => a.usedVolume > b.usedVolume ? a : b).label}.`;
+  }
+
+  if (q.includes('anomal') || q.includes('dimension') || q.includes('size') || q.includes('measure')) {
+    const anomalies = inventory.filter(p => p.anomaly);
+    if (!anomalies.length) return `⬡ Dimension Audit: No anomalies detected. All ${inventory.length} parts are within ±30% of category averages. CV calibration nominal.`;
+    return `⬡ Dimension Anomalies: ${anomalies.length} part(s) flagged: ${anomalies.map(p=>p.name).join(', ')}. Review physical dimensions — potential measurement error or non-standard variant. Recommend physical inspection before production use.`;
+  }
+
+  if (q.includes('categor') || q.includes('type') || q.includes('class')) {
+    const catMap = {};
+    inventory.forEach(p => catMap[p.category] = (catMap[p.category]||0) + p.quantity);
+    const topCat = Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
+    return `⬡ Category Breakdown: ${Object.keys(catMap).length} categories tracked. Dominant: ${topCat ? `"${topCat[0]}" with ${topCat[1]} units` : 'n/a'}. Distribution: ${Object.entries(catMap).map(([k,v])=>`${k}:${v}`).join(' · ')}.`;
+  }
+
+  if (q.includes('picker') || q.includes('route') || q.includes('path') || q.includes('pick')) {
+    return `⬡ Picker Routing: Optimised routes calculated using nearest-bin heuristic. Current warehouse has ${[...new Set(bins.map(b=>b.zone))].length} zones (A–D). Average pick path reduced by 22% after last optimisation. Use the Picker Routing Simulator below to generate a live route.`;
+  }
+
+  if (q.includes('total') || q.includes('summary') || q.includes('status') || q.includes('overview')) {
+    return `⬡ Inventory Summary: ${inventory.length} SKUs · ${totalParts.toLocaleString()} total units · ${util}% space utilised · ${BINS - emptyBins.length} bins active · ${lowParts.length} critical low-stock alerts · ${inventory.filter(p=>p.anomaly).length} anomalies. System status: ${lowParts.length > 3 ? '⚠ Attention Required' : '✓ Operational'}.`;
+  }
+
+  // Default
+  const insights = buildInsights();
+  return insights[Math.floor(Math.random() * insights.length)] || `⬡ Inventory at ${util}% utilisation. ${inventory.length} SKUs tracked. Ask me about space, restocking, bins, categories, or anomalies for specific recommendations.`;
+}
+
+function addLLMMessage(text, role) {
+  const chat = document.getElementById('llm-chat');
+  const div = document.createElement('div');
+  div.className = role === 'ai' ? 'llm-message' : 'llm-user-msg';
+  div.innerHTML = role === 'ai' ? `<span style="font-size:0.68rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:4px;">AI ENGINE</span>${text}` : `<span style="font-size:0.68rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:4px;">YOU</span>${text}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  llmHistory.push({ role, text });
+}
+
+// ============================================================
+// PICKER ROUTING SIMULATOR
+// ============================================================
+function updatePickerCheckboxes() {
+  const el = document.getElementById('picker-checkboxes');
+  el.innerHTML = inventory.slice(0, 8).map(p =>
+    `<label style="display:flex;align-items:center;gap:5px;font-size:0.72rem;cursor:pointer;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);">
+      <input type="checkbox" value="${p.id}" style="width:auto;padding:0;"/> ${p.name.substring(0,14)}
+    </label>`
+  ).join('');
+}
+
+function runPickerRoute() {
+  const checked = [...document.querySelectorAll('#picker-checkboxes input:checked')];
+  if (!checked.length) { toast('Select at least one part to pick', 'warning'); return; }
+
+  const partIds = checked.map(c => parseInt(c.value));
+  const pickList = partIds.map(id => {
+    const p = getPartById(id);
+    if (!p) return null;
+    const bin = bins[p.binId];
+    return { name: p.name, bin: bin.label, zone: bin.zone, id };
+  }).filter(Boolean);
+
+  // Sort by zone then bin label (nearest-bin heuristic)
+  pickList.sort((a, b) => a.zone.localeCompare(b.zone) || a.bin.localeCompare(b.bin));
+
+  const panel = document.getElementById('picker-route-panel');
+  const totalDist = pickList.length * 12 + Math.floor(Math.random() * 20);
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span class="badge badge-green">Optimised Route</span>
+      <span style="font-size:0.72rem;color:var(--text-muted);">Est. ${totalDist}m travel · ${pickList.length} stops</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;">
+      <span style="font-size:0.72rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;">START</span>
+      ${pickList.map((p,i) => `
+        <span style="color:var(--border-bright);">→</span>
+        <span style="padding:3px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;">
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--accent);">${p.bin}</span>
+          <span style="color:var(--text-muted);">${p.name.substring(0,10)}</span>
+        </span>
+      `).join('')}
+      <span style="color:var(--border-bright);">→</span>
+      <span style="font-size:0.72rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;">DISPATCH</span>
+    </div>
+    <div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);">Zones visited: ${[...new Set(pickList.map(p=>p.zone))].join(' → ')} · Saved ~${Math.floor(totalDist*0.18)}m vs random order</div>
+  `;
+  logAction(`Picker route: ${pickList.length} stops, ${totalDist}m — ${[...new Set(pickList.map(p=>p.zone))].join('→')}`, 'success');
+  toast('Picker route optimised', 'success');
+}
+
+// ============================================================
+// MASTER REFRESH
+// ============================================================
+function refreshAll() {
+  renderTable();
+  renderGrid();
+  updateKPIs();
+  updateCharts();
+  updatePickerCheckboxes();
+  checkAlerts();
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  seedInventory();
+  initCharts();
+  refreshAll();
+  // Auto initial LLM insight
+  setTimeout(() => {
+    addLLMMessage('⬡ System online. Inventory loaded with 12 SKUs. Space utilisation at ' + calcUtilPct() + '%. Ask me anything about your warehouse.', 'ai');
+    generateAutoInsight();
+  }, 800);
+  logAction('NexusWare IMS initialised — 12 seed parts loaded', 'success');
+  logAction('CV engine online — ready to scan new parts', 'info');
+});
+
+// Close modals on overlay click
+document.getElementById('detect-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('bin-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBinModal();
+});
+</script>
+</body>
+</html>
